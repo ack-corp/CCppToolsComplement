@@ -19,7 +19,7 @@ REQUIRED_ENTRY_FIELDS = {
 }
 
 
-def tokenized_obj_expr(obj_expr: str) -> list[str]:
+def getTokenizedObjExpr(obj_expr: str) -> list[str]:
     return [part for part in obj_expr.split(" ") if part.strip()]
 
 
@@ -194,7 +194,7 @@ def getRelSourceErrors(entry_index: int, entry: JsonObject, value: Any, field_er
 def getObjExprErrors(entry_index: int, entry: JsonObject, value: Any, field_errors_by_key: FieldErrorsByKey) -> list[str]:
     if not isNonEmptyString(value):
         return [f"[entry {entry_index}] 'obj_expr' must be a non-empty string."]
-    obj_tokens = tokenized_obj_expr(str(value))
+    obj_tokens = getTokenizedObjExpr(str(value))
     if not obj_tokens:
         return [f"[entry {entry_index}] 'obj_expr' cannot be blank."]
     errors: list[str] = []
