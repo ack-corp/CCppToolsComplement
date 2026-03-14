@@ -62,58 +62,15 @@ def validate_compile_profile_extensions(entry_index: int, rel_sources: list[str]
     return [f"[entry {entry_index}] Missing compile profile(s) for source extension(s): {', '.join(missing)}."]
 
 
-def validate_run_args(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
-    if not isinstance(value, str):
-        return [f"[entry {entry_index}] 'run_args' must be a string."]
-    return []
-
-
-def validate_bin_name(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
-    if not isNonEmptyString(value):
-        return [f"[entry {entry_index}] 'bin_name' must be a non-empty string."]
-    return []
-
-
-def validate_rel_sources(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
-    if not isinstance(value, list) or not value:
-        return [f"[entry {entry_index}] 'rel_sources' must be a non-empty list of strings."]
-
-    errors: list[str] = []
-    for source_index, source in enumerate(value):
-        if not isNonEmptyString(source):
-            errors.append(f"[entry {entry_index}] rel_sources[{source_index}] must be a non-empty string.")
-            continue
-        source_str = str(source)
-        if Path(source_str).is_absolute():
-            errors.append(f"[entry {entry_index}] rel_sources[{source_index}] must be relative.")
-    return errors
-
-
-def validate_obj_expr(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
-    if not isNonEmptyString(value):
-        return [f"[entry {entry_index}] 'obj_expr' must be a non-empty string."]
-
-    obj_tokens = tokenized_obj_expr(str(value))
-    if not obj_tokens:
-        return [f"[entry {entry_index}] 'obj_expr' cannot be blank."]
-
-    errors: list[str] = []
-    for token_index, token in enumerate(obj_tokens):
-        if Path(token).suffix != ".o":
-            errors.append(f"[entry {entry_index}] obj_expr token #{token_index} ('{token}') must end with .o.")
-    errors.extend(getSrcsObjsMatch(entry_index, extract_rel_sources(entry.get("rel_sources")), obj_tokens))
-    return errors
-
-
 def validate_compile_profiles_field(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
     profile_errors, extensions = validate_compile_profiles(entry_index, value)
     profile_errors.extend(
-        validate_compile_profile_extensions(entry_index, extract_rel_sources(entry.get("rel_sources")), extensions)
+        validate_compile_profile_extensions(entry_index, getRelSources(entry.get("rel_sources")), extensions)
     )
     return profile_errors
 
 
-def extract_rel_sources(value: Any) -> list[str]:
+def getRelSources(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     rel_sources: list[str] = []
@@ -157,7 +114,7 @@ def getMakefileNameErrors(entry_index: int, entry: JsonObject, value: Any) -> li
 def getLinkCompilerErrors(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
     if not isNonEmptyString(value):
         return [f"[entry {entry_index}] 'link_compiler' must be a non-empty string."]
-    rel_sources = extract_rel_sources(entry.get("rel_sources"))
+    rel_sources = getRelSources(entry.get("rel_sources"))
     if not rel_sources:
         return [f"[entry {entry_index}] Cannot validate 'link_compiler': no valid main source found in 'rel_sources'."]
     main_extension = Path(rel_sources[0]).suffix
@@ -181,15 +138,54 @@ def getLinkFlagErrors(entry_index: int, entry: JsonObject, value: Any) -> list[s
     return []
 
 
+def getRunArgErrors(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
+    if not isinstance(value, str):
+        return [f"[entry {entry_index}] 'run_args' must be a string."]
+    return []
+
+
+def getBinaryNameErrors(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
+    if not isNonEmptyString(value):
+        return [f"[entry {entry_index}] 'bin_name' must be a non-empty string."]
+    return []
+
+
+def getRelSourceErrors(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
+    if not isinstance(value, list) or not value:
+        return [f"[entry {entry_index}] 'rel_sources' must be a non-empty list of strings."]
+    errors: list[str] = []
+    for source_index, source in enumerate(value):
+        if not isNonEmptyString(source):
+            errors.append(f"[entry {entry_index}] rel_sources[{source_index}] must be a non-empty string.")
+        else:
+            if Path(source).is_absolute():
+                errors.append(f"[entry {entry_index}] rel_sources[{source_index}] must be relative.")
+    return errors
+
+
+def getObjExprErrors(entry_index: int, entry: JsonObject, value: Any) -> list[str]:
+    if not isNonEmptyString(value):
+        return [f"[entry {entry_index}] 'obj_expr' must be a non-empty string."]
+    obj_tokens = tokenized_obj_expr(str(value))
+    if not obj_tokens:
+        return [f"[entry {entry_index}] 'obj_expr' cannot be blank."]
+    errors: list[str] = []
+    for token_index, token in enumerate(obj_tokens):
+        if Path(token).suffix != ".o":
+            errors.append(f"[entry {entry_index}] obj_expr token #{token_index} ('{token}') must end with .o.")
+    errors.extend(getSrcsObjsMatch(entry_index, getRelSources(entry.get("rel_sources")), obj_tokens))
+    return errors
+
+
 def getFieldValidator(key: str):
     field_validators: dict[str, FieldValidator] = {
         "output_makefile": getMakefileNameErrors,
         "link_compiler": getLinkCompilerErrors,
         "link_flags": getLinkFlagErrors,
-        "run_args": validate_run_args,
-        "bin_name": validate_bin_name,
-        "rel_sources": validate_rel_sources,
-        "obj_expr": validate_obj_expr,
+        "run_args": getRunArgErrors,
+        "bin_name": getBinaryNameErrors,
+        "rel_sources": getRelSourceErrors,
+        "obj_expr": getObjExprErrors,
         "compile_profiles": validate_compile_profiles_field,
     }
     return field_validators[key]
