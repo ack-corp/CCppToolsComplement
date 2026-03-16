@@ -5,8 +5,13 @@ const vscode = require("vscode");
 const COMMAND_ID = "ccppToolsComplement.generateAndDebugFromCurrentFile";
 const CONFIG_REL_PATH = path.join(".vscode", "makefileConfig.json");
 const LAUNCH_REL_PATH = path.join(".vscode", "launch.json");
+const BUNDLED_PYTHON_ROOT = "bundled";
+const PYTHON_MODULE_PREFIX = "srcs.script";
+
+let extensionInstallPath = null;
 
 function activate(context) {
+  extensionInstallPath = context.extensionPath;
   const disposable = vscode.commands.registerCommand(COMMAND_ID, async () => {
     try {
       await generateAndDebugFromCurrentFile();
@@ -25,10 +30,23 @@ async function generateAndDebugFromCurrentFile() {
   const workspaceFolder = getWorkspaceFolder();
   const activeFile = getActiveFile(workspaceFolder);
   const pythonBin = vscode.workspace.getConfiguration("ccppToolsComplement").get("pythonPath", "python3");
+  const pythonPathRoot = getBundledPythonRoot();
 
-  await runPythonModuleTask(workspaceFolder, pythonBin, "srcs.script.generateJson", true);
-  await runPythonModuleTask(workspaceFolder, pythonBin, "srcs.script.generateMakefileFromJson", false);
-  await runPythonModuleTask(workspaceFolder, pythonBin, "srcs.script.generateVscodeIntegrationFromJson", false);
+  await runPythonModuleTask(workspaceFolder, pythonBin, pythonPathRoot, `${PYTHON_MODULE_PREFIX}.generateJson`, true);
+  await runPythonModuleTask(
+    workspaceFolder,
+    pythonBin,
+    pythonPathRoot,
+    `${PYTHON_MODULE_PREFIX}.generateMakefileFromJson`,
+    false
+  );
+  await runPythonModuleTask(
+    workspaceFolder,
+    pythonBin,
+    pythonPathRoot,
+    `${PYTHON_MODULE_PREFIX}.generateVscodeIntegrationFromJson`,
+    false
+  );
 
   const entry = await pickProgramEntry(workspaceFolder, activeFile);
   const programName = getProgramNameFromMakefile(entry.output_makefile);
@@ -67,14 +85,36 @@ function getActiveFile(workspaceFolder) {
   return path.resolve(filePath);
 }
 
-async function runPythonModuleTask(workspaceFolder, pythonBin, moduleName, interactive) {
+function getBundledPythonRoot() {
+  if (!extensionInstallPath) {
+    throw new Error("Extension install path is unavailable.");
+  }
+  const bundledRoot = path.join(extensionInstallPath, BUNDLED_PYTHON_ROOT);
+  if (!fs.existsSync(bundledRoot)) {
+    throw new Error(`Bundled Python resources not found at '${bundledRoot}'.`);
+  }
+  return bundledRoot;
+}
+
+function getPythonEnvironment(pythonPathRoot) {
+  const existingPythonPath = process.env.PYTHONPATH;
+  return {
+    ...process.env,
+    PYTHONPATH: existingPythonPath
+      ? `${pythonPathRoot}${path.delimiter}${existingPythonPath}`
+      : pythonPathRoot
+  };
+}
+
+async function runPythonModuleTask(workspaceFolder, pythonBin, pythonPathRoot, moduleName, interactive) {
   const task = new vscode.Task(
     { type: "shell" },
     workspaceFolder,
     `CCppToolsComplement: ${moduleName}`,
     "CCppToolsComplement",
     new vscode.ShellExecution(pythonBin, ["-m", moduleName], {
-      cwd: workspaceFolder.uri.fsPath
+      cwd: workspaceFolder.uri.fsPath,
+      env: getPythonEnvironment(pythonPathRoot)
     })
   );
 
