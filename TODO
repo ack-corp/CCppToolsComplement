@@ -1,3 +1,19 @@
         read and clean all readme
         clean generateJson.py then start vscode integration
         complete /home/achaisne/Documents/CCppToolsComplement/srcs/vscodeIntegration as vscode extention
+
+
+F5 was doing nothing because this extension project had no VS Code debug launch config. I added one at .vscode/launch.json, so F5 should now start an Extension Development Host.
+
+To test it correctly:
+
+In /srcs/vscodeIntegration, press F5 and choose Run Extension.
+In the new VS Code window, open the real project root, not the extension folder: /home/achaisne/Documents/CCppToolsComplement.
+Open a .c or .cpp file.
+Run CCppToolsComplement: Generate and Debug Current File from the Command Palette, or click the play icon in the editor title.
+Why this matters:
+
+The command is only contributed for C/C++ files, as defined in package.json (line 17).
+It does not run automatically on F5; F5 only launches the extension host.
+The extension then runs python3 -m srcs.script.generateJson and related modules from the opened workspace, so the workspace must be the project root, not srcs/vscodeIntegration, per extension.js (line 24).
+If you want, I can also add a second launch config that opens /home/achaisne/Documents/CCppToolsComplement automatically in the Extension Development Host so testing is one keypress.
