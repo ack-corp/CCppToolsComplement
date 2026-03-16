@@ -15,6 +15,36 @@ def force_flags(flags: str, required_flags: tuple[str, ...] = FORCED_DEBUG_FLAGS
     return " ".join(tokens)
 
 
+def getUniqueCompiler(compile_profiles: list[dict]):
+    unique_compilers: list[str] = []
+    #divide here
+    for profile in compile_profiles:
+        compiler = profile["compiler"]
+        if compiler not in unique_compilers:
+            unique_compilers.append(compiler)
+    return unique_compilers
+
+
+def getCompilersVar(unique_compilers, var_key_by_compiler, compile_profiles):
+    var_lines = []
+    for compiler in unique_compilers:
+        key = var_key_by_compiler[compiler]
+        flags = next(profile["flags"] for profile in compile_profiles if profile["compiler"] == compiler)
+        var_lines.append(f"COMPILER_{key} = {compiler}")
+        var_lines.append(f"FLAGS_{key} = {force_flags(flags)}")
+    return var_lines
+
+
+def getPatternRules(compile_profiles, var_key_by_compiler):
+    pattern_rules = []
+    for profile in compile_profiles:
+        ext = profile["ext"]
+        compiler = profile["compiler"]
+        key = var_key_by_compiler[compiler]
+        pattern_rules.append(f"%.o: %{ext}\n\t$(COMPILER_{key}) $(FLAGS_{key}) -c $< -o $@\n")
+    return pattern_rules
+
+
 def render_child_makefile(
     compile_profiles: list[dict],
     link_compiler: str,
@@ -25,28 +55,11 @@ def render_child_makefile(
     obj_expr: str,
 ):
     srcs = " ".join(rel_sources)
-    unique_compilers: list[str] = []
-    #divide here
-    for profile in compile_profiles:
-        compiler = profile["compiler"]
-        if compiler not in unique_compilers:
-            unique_compilers.append(compiler)
-
+    unique_compilers: list[str] = getUniqueCompiler(compile_profiles)
     var_key_by_compiler = {compiler: compiler_var_key(compiler) for compiler in unique_compilers}
-    var_lines = []
-    for compiler in unique_compilers:
-        key = var_key_by_compiler[compiler]
-        flags = next(profile["flags"] for profile in compile_profiles if profile["compiler"] == compiler)
-        var_lines.append(f"COMPILER_{key} = {compiler}")
-        var_lines.append(f"FLAGS_{key} = {force_flags(flags)}")
-
+    var_lines = getCompilersVar(unique_compilers, var_key_by_compiler, compile_profiles)
     link_key = var_key_by_compiler[link_compiler]
-    pattern_rules = []
-    for profile in compile_profiles:
-        ext = profile["ext"]
-        compiler = profile["compiler"]
-        key = var_key_by_compiler[compiler]
-        pattern_rules.append(f"%.o: %{ext}\n\t$(COMPILER_{key}) $(FLAGS_{key}) -c $< -o $@\n")
+    pattern_rules = getPatternRules(compile_profiles, var_key_by_compiler)
     lines = [
         *var_lines,
         f"LINK_COMPILER = $(COMPILER_{link_key})",
