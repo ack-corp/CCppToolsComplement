@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const vscode = require("vscode");
+const { getWorkspaceFolder, getExtentionAbsolutePath } = require("./utils");
 
 const COMMAND_ID = "ccppToolsComplement.generateAndDebugFromCurrentFile";
 const CREATE_LAUNCH_ACTION = "ccppToolsComplement.createLaunch";
@@ -13,11 +14,10 @@ const ACTION_LAUNCH = "launch";
 const ACTION_SET_ARGS = "setArgs";
 const ACTION_SET_COMPILE_FLAGS = "setCompileFlags";
 const ACTION_SET_LINK_FLAGS = "setLinkFlags";
-
-let extensionInstallPath = null;
+let extensionContext = null;
 
 function activate(context) {
-  extensionInstallPath = context.extensionPath;
+  extensionContext = context;
   const disposable = vscode.commands.registerCommand(COMMAND_ID, async () => {
     try {
       await generateAndDebugFromCurrentFile();
@@ -26,7 +26,6 @@ function activate(context) {
       vscode.window.showErrorMessage(message);
     }
   });
-
   context.subscriptions.push(disposable);
 }
 
@@ -35,7 +34,7 @@ function deactivate() {}
 async function generateAndDebugFromCurrentFile() {
   const workspaceFolder = getWorkspaceFolder();
   const pythonBin = vscode.workspace.getConfiguration("ccppToolsComplement").get("pythonPath", "python3");
-  const pythonPathRoot = getBundledPythonRoot();
+  const pythonPathRoot = getExtentionAbsolutePath(extensionContext, BUNDLED_PYTHON_ROOT);
 
   while (true) {
     const selection = await pickProgram(workspaceFolder);
@@ -53,25 +52,6 @@ async function generateAndDebugFromCurrentFile() {
     }
     return;
   }
-}
-
-function getWorkspaceFolder() {
-  const folder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0];
-  if (!folder) {
-    throw new Error("Open the project as a VSCode workspace before using CCppToolsComplement.");
-  }
-  return folder;
-}
-
-function getBundledPythonRoot() {
-  if (!extensionInstallPath) {
-    throw new Error("Extension install path is unavailable.");
-  }
-  const bundledRoot = path.join(extensionInstallPath, BUNDLED_PYTHON_ROOT);
-  if (!fs.existsSync(bundledRoot)) {
-    throw new Error(`Bundled Python resources not found at '${bundledRoot}'.`);
-  }
-  return bundledRoot;
 }
 
 function getPythonEnvironment(pythonPathRoot) {

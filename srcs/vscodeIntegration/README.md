@@ -33,3 +33,12 @@ This produces a `.vsix` file that can be installed in VSCode.
 - The default Python executable is `python3`.
 - You can change it through the `ccppToolsComplement.pythonPath` setting.
 - The packaged extension now includes its Python scripts under `bundled/`, so it no longer depends on sibling files outside the extension folder.
+
+
+## extension.js
+
+    entry point : activate
+    like q constructor
+
+    output point : deactivate
+    like a destructor

@@ -6,6 +6,7 @@
   "publisher": "achaisne",
   "files": [
     "extension.js",
+    "utils.js",
     "package.json",
     "README.md",
     "resources/**",
