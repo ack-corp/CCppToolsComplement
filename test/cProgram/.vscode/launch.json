@@ -42,6 +42,27 @@
           "ignoreFailures": true
         }
       ]
+    },
+    {
+      "name": "Debug graph ff",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/ff.out",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "preLaunchTask": "graph: build ff (debug)",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
     }
   ]
 }

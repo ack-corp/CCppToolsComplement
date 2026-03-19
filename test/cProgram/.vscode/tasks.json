@@ -32,6 +32,22 @@
       "problemMatcher": [
         "$gcc"
       ]
+    },
+    {
+      "label": "graph: build ff (debug)",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "-f",
+        "Makefile.ff",
+        "all"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ]
     }
   ]
 }

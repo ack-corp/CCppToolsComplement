@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 PYTHON = sys.executable
 C_PROGRAM_DIR = ROOT / "test" / "cProgram"
-BUNDLED_PYTHON_ROOT = ROOT / "srcs" / "vscodeIntegration" / "bundled"
+BACKEND_PYTHON_ROOT = ROOT / "srcs" / "vscodeIntegration" / "backend"
 MODULE_GENERATE_JSON = "srcs.script.generateJson"
 MODULE_GENERATE_MAKEFILE = "srcs.script.generateMakefileFromJson"
 MODULE_GENERATE_VSCODE = "srcs.script.generateVscodeIntegrationFromJson"
@@ -41,11 +41,11 @@ def run(
 ) -> str:
     env = os.environ.copy()
     existing_pythonpath = env.get("PYTHONPATH")
-    bundled_pythonpath = str(BUNDLED_PYTHON_ROOT)
+    backend_pythonpath = str(BACKEND_PYTHON_ROOT)
     env["PYTHONPATH"] = (
-        f"{bundled_pythonpath}{os.pathsep}{existing_pythonpath}"
+        f"{backend_pythonpath}{os.pathsep}{existing_pythonpath}"
         if existing_pythonpath
-        else bundled_pythonpath
+        else backend_pythonpath
     )
     if env_overrides:
         env.update(env_overrides)

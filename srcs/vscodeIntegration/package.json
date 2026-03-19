@@ -5,14 +5,11 @@
   "version": "0.0.1",
   "publisher": "achaisne",
   "files": [
-    "extension.js",
-    "pythonRunner.js",
-    "utils.js",
-    "utilsJson.js",
+    "frontend/**",
     "package.json",
     "README.md",
     "resources/**",
-    "bundled/**"
+    "backend/**"
   ],
   "engines": {
     "vscode": "^1.85.0"
@@ -29,7 +26,7 @@
     "onLanguage:c",
     "onLanguage:cpp"
   ],
-  "main": "./extension.js",
+  "main": "./frontend/extension.js",
   "contributes": {
     "commands": [
       {

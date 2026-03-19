@@ -10,7 +10,7 @@ const CREATE_LAUNCH_ACTION = "ccppToolsComplement.createLaunch";
 const GO_BACK_ACTION = "ccppToolsComplement.goBack";
 const CONFIG_REL_PATH = path.join(".vscode", "makefileConfig.json");
 const LAUNCH_REL_PATH = path.join(".vscode", "launch.json");
-const BUNDLED_PYTHON_ROOT = "bundled";
+const BACKEND_PYTHON_ROOT = "backend";
 const PYTHON_MODULE_PREFIX = "srcs.script";
 const ACTION_LAUNCH = "launch";
 const ACTION_SET_ARGS = "setArgs";
@@ -36,7 +36,7 @@ function deactivate() { }
 async function generateAndDebugFromCurrentFile() {
   const workspaceFolder = getWorkspaceFolder();
   const pythonBin = vscode.workspace.getConfiguration("ccppToolsComplement").get("pythonPath", "python3");
-  const pythonPathRoot = getExtentionAbsolutePath(extensionContext, BUNDLED_PYTHON_ROOT);
+  const pythonPathRoot = getExtentionAbsolutePath(extensionContext, BACKEND_PYTHON_ROOT);
 
   while (true) {
     const selection = await pickProgram(workspaceFolder, pythonBin, pythonPathRoot);
