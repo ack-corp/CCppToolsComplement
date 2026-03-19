@@ -69,6 +69,13 @@ function createSubAction(makefileJsonObject) {
             prototypeUpdateLinkFlags,
             [makefileJsonObject],
             []
+        ),
+        new MenuNode(
+            "Delete entry",
+            "Remove this program entry from makefileConfig.json",
+            prototypeDeleteEntry,
+            [makefileJsonObject],
+            []
         )
     ]
 }
@@ -129,10 +136,16 @@ function prototypeUpdateCompileFlagsForProfile(makefileJsonObject, compileProfil
  */
 function prototypeUpdateLinkFlags(makefileJsonObject) { }
 
+/**
+ * @param {MakefileConfigEntry} makefileJsonObject
+ */
+function prototypeDeleteEntry(makefileJsonObject) { }
+
 module.exports = {
     MenuNode,
     prototypeLaunchProgram,
     prototypeUpdateRunArgs,
     prototypeUpdateCompileFlagsForProfile,
-    prototypeUpdateLinkFlags
+    prototypeUpdateLinkFlags,
+    prototypeDeleteEntry
 };
