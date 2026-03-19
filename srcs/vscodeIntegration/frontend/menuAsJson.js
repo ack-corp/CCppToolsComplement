@@ -4,6 +4,7 @@
  */
 
 const { getMakefileConfigJson } = require("./utilsJson");
+const { getProgramNameFromEntry } = require("./bridge");
 
 class MenuNode {
     constructor(label, description, runner = null, args = [], sub = []) {
@@ -82,17 +83,20 @@ function createSubAction(makefileJsonObject) {
 
 /**
  * @param {MakefileConfigEntry[]} makefileJsonObject
+ * @returns {MenuNode[]}
  */
 function createAction(makefileJsonObject) {
+    const menuAction = []
     for (const entry of makefileJsonObject) {
-        new MenuNode(
-            "Launch program",
-            "Build if needed and start the debugger",
-            prototypeLaunchProgram,
+        menuAction.push(new MenuNode(
+            getProgramNameFromEntry(entry),
+            "Options for: " + getProgramNameFromEntry(entry),
+            null,
             [],
             createSubAction(entry)
-        )
+        ))
     }
+    return menuAction;
 }
 
 /**
@@ -102,18 +106,20 @@ function createAction(makefileJsonObject) {
  */
 async function createMenu(workspaceFolder, pythonBin, pythonPathRoot) {
     /** @type {MakefileConfigEntry[]} */
-    const makefileConfigJson = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot)
-    return [
-        createAction(makefileConfigJson),
+    const makefileConfigJson = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
+    const menu = createAction(makefileConfigJson);
+    menu.push(
         new MenuNode(
             "Create new launch",
             "Add a new program entry and regenerate VS Code launch.json",
-            null,
+            prototypeCreateLaunch,
             [],
             []
         )
-    ]
+    );
+    return menu;
 }
+
 
 /**
  * @param {MakefileConfigEntry} makefileJsonObject
@@ -141,11 +147,18 @@ function prototypeUpdateLinkFlags(makefileJsonObject) { }
  */
 function prototypeDeleteEntry(makefileJsonObject) { }
 
+/**
+ * Prototype for the top-level "Create new launch" action.
+ */
+function prototypeCreateLaunch() { }
+
 module.exports = {
     MenuNode,
+    createMenu,
     prototypeLaunchProgram,
     prototypeUpdateRunArgs,
     prototypeUpdateCompileFlagsForProfile,
     prototypeUpdateLinkFlags,
-    prototypeDeleteEntry
+    prototypeDeleteEntry,
+    prototypeCreateLaunch
 };
