@@ -84,6 +84,27 @@
           "ignoreFailures": true
         }
       ]
+    },
+    {
+      "name": "Debug graph john",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/john.out",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "preLaunchTask": "graph: build john (debug)",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
     }
   ]
 }

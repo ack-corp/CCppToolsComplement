@@ -9,6 +9,7 @@ const {
   getCompileProfileLabel
 } = require("./bridge");
 
+
 const CREATE_LAUNCH_ACTION = "ccppToolsComplement.createLaunch";
 const MENU_RESULT_BACK = Symbol("menuBack");
 const MENU_RESULT_REFRESH = Symbol("menuRefresh");

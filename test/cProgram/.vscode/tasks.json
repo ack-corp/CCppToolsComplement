@@ -64,6 +64,22 @@
       "problemMatcher": [
         "$gcc"
       ]
+    },
+    {
+      "label": "graph: build john (debug)",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "-f",
+        "Makefile.john",
+        "all"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ]
     }
   ]
 }
