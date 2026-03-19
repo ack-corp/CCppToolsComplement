@@ -130,8 +130,6 @@ def getMakefileNameErrors(entry_index: int, entry: JsonObject, value: Any, field
         return [f"[entry {entry_index}] 'output_makefile' must be a non-empty string."]
     errors: list[str] = []
     output_path = Path(str(value))
-    if not output_path.is_absolute():
-        errors.append(f"[entry {entry_index}] 'output_makefile' should be an absolute path.")
     if not getProgramNameFromMakefileName(output_path):
         errors.append(f"[entry {entry_index}] output_makefile filename must match Makefile.<program>.")
     return errors

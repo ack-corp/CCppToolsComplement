@@ -257,7 +257,7 @@ def generateJson() -> None:
     config_path = (project_root / CONFIG_REL_PATH).resolve()
 
     payload = {
-        "output_makefile": str(out_path),
+        "output_makefile": os.path.relpath(out_path, project_root).replace("\\", "/"),
         "compile_profiles": compile_profiles,
         "link_compiler": link_compiler,
         "link_flags": link_flags,

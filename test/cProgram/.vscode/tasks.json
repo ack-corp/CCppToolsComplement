@@ -2,12 +2,28 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "graph: build main1 (debug)",
+      "label": "graph: build okv1 (debug)",
       "type": "shell",
       "command": "make",
       "args": [
         "-f",
-        "Makefile.main1",
+        "Makefile.okv1",
+        "all"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ]
+    },
+    {
+      "label": "graph: build testv002 (debug)",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "-f",
+        "Makefile.testv002",
         "all"
       ],
       "options": {

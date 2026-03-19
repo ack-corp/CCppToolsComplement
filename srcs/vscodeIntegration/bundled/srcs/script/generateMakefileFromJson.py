@@ -150,14 +150,12 @@ def normalize_profiles(entry: dict) -> tuple[list[dict], str, str]:
         ext = profile.get("ext")
         compiler = profile.get("compiler")
         flags = profile.get("flags")
-        if not all(isinstance(v, str) and v for v in [ext, compiler, flags]):
-            raise SystemExit("Each compile profile needs non-empty string keys: ext, compiler, flags.")
         normalized.append({"ext": ext, "compiler": compiler, "flags": flags})
     return normalized, link_compiler, link_flags
 
 
 def generate_one(entry: dict) -> tuple[Path, str]:
-    out_path = Path(require(entry, "output_makefile")).resolve()
+    out_path = (Path.cwd() / str(require(entry, "output_makefile"))).resolve()
     run_args = require(entry, "run_args")
     bin_name = require(entry, "bin_name")
     rel_sources = require(entry, "rel_sources")

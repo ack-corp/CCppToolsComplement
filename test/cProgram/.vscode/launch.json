@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug graph main1",
+      "name": "Debug graph okv1",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/main1.out",
+      "program": "${workspaceFolder}/okv1.out",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
@@ -13,7 +13,28 @@
       "externalConsole": false,
       "MIMode": "gdb",
       "miDebuggerPath": "/usr/bin/gdb",
-      "preLaunchTask": "graph: build main1 (debug)",
+      "preLaunchTask": "graph: build okv1 (debug)",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    },
+    {
+      "name": "Debug graph testv002",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/testv002.out",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/bin/gdb",
+      "preLaunchTask": "graph: build testv002 (debug)",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",

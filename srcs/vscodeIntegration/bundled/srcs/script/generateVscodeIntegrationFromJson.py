@@ -130,7 +130,7 @@ def get_tasks_and_launches_from_config(workspace: Path, config_path: Path) -> tu
     tasks: JsonItems = []
     launches: JsonItems = []
     for entry in entries:
-        output_makefile = Path(str(entry.get("output_makefile", ""))).resolve()
+        output_makefile = (workspace / str(entry.get("output_makefile", ""))).resolve()
         bin_name = str(entry.get("bin_name", ""))
         run_args = str(entry.get("run_args", ""))
         program = getProgramNameFromMakefileName(output_makefile) or ""

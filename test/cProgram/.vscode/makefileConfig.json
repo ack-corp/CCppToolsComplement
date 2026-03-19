@@ -1,6 +1,6 @@
 [
   {
-    "output_makefile": "/home/chaisneau/Documents/CCppToolsComplement/test/cProgram/Makefile.main1",
+    "output_makefile": "Makefile.okv1",
     "compile_profiles": [
       {
         "ext": ".c",
@@ -11,7 +11,7 @@
     "link_compiler": "gcc",
     "link_flags": "",
     "run_args": "",
-    "bin_name": "main1.out",
+    "bin_name": "okv1.out",
     "rel_sources": [
       "main1.c",
       "one.c",
@@ -20,7 +20,7 @@
     "obj_expr": "main1.o one.o subfolder/two.o"
   },
   {
-    "output_makefile": "/home/achaisne/Documents/CCppToolsComplement/test/cProgram/Makefile.test001",
+    "output_makefile": "Makefile.testv002",
     "compile_profiles": [
       {
         "ext": ".c",
@@ -31,7 +31,7 @@
     "link_compiler": "gcc",
     "link_flags": "",
     "run_args": "",
-    "bin_name": "test001.out",
+    "bin_name": "testv002.out",
     "rel_sources": [
       "main1.c",
       "one.c",
