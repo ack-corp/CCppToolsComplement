@@ -1,9 +1,8 @@
-        read and clean all readme
-        clean generateJson.py then start vscode integration
-        complete /home/achaisne/Documents/CCppToolsComplement/srcs/vscodeIntegration as vscode extention
+clean extension.js
+possibly refactor tree with backend/frontend folder (back in python front in js)
+create input box / input logic from the front to replace the terminal input logic from the back
 
-
-F5 was doing nothing because this extension project had no VS Code debug launch config. I added one at .vscode/launch.json, so F5 should now start an Extension Development Host.
+---------------
 
 To test it correctly:
 
@@ -17,3 +16,17 @@ The command is only contributed for C/C++ files, as defined in package.json (lin
 It does not run automatically on F5; F5 only launches the extension host.
 The extension then runs python3 -m srcs.script.generateJson and related modules from the opened workspace, so the workspace must be the project root, not srcs/vscodeIntegration, per extension.js (line 24).
 If you want, I can also add a second launch config that opens /home/achaisne/Documents/CCppToolsComplement automatically in the Extension Development Host so testing is one keypress.
+
+---------------
+
+Best architecture:
+
+JS/VS Code side: collect data with showInputBox, showQuickPick, or a WebviewPanel if the form gets bigger.
+Python side: keep only validation, source discovery, compiler detection, and JSON writing.
+Interface between them: pass structured data to Python as CLI args or one JSON payload.
+So the clean replacement is not “move UI to Python”, but:
+
+remove input() from Python,
+make Python a non-interactive engine,
+build the windows in the VS Code extension.
+If you want, I can refactor createLaunch() so the whole “new launch” flow becomes graphical and the Python script becomes pure backend logic.
