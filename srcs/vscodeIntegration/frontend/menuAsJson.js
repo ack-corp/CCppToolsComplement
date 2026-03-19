@@ -40,14 +40,14 @@ function createSubAction(makefileJsonObject) {
             "Launch program",
             "Build if needed and start the debugger",
             prototypeLaunchProgram,
-            [],
+            [makefileJsonObject],
             []
         ),
         new MenuNode(
             "Set args",
             runArgsDescription,
             prototypeUpdateRunArgs,
-            [],
+            [makefileJsonObject],
             []
         ),
         new MenuNode(
@@ -59,7 +59,7 @@ function createSubAction(makefileJsonObject) {
                 `${compileProfile.compiler} ${compileProfile.ext}`.trim(),
                 typeof compileProfile.flags === "string" && compileProfile.flags ? compileProfile.flags : "(empty)",
                 prototypeUpdateCompileFlagsForProfile,
-                [],
+                [makefileJsonObject, compileProfile],
                 []
             ))
         ),
@@ -67,7 +67,7 @@ function createSubAction(makefileJsonObject) {
             "Set link flags",
             linkFlagsDescription,
             prototypeUpdateLinkFlags,
-            [],
+            [makefileJsonObject],
             []
         )
     ]
@@ -108,15 +108,29 @@ async function createMenu(workspaceFolder, pythonBin, pythonPathRoot) {
     ]
 }
 
-function prototypeLaunchProgram() { }
-function prototypeUpdateRunArgs() { }
-function prototypeUpdateCompileFlagsForProfile() { }
-function prototypeUpdateLinkFlags() { }
+/**
+ * @param {MakefileConfigEntry} makefileJsonObject
+ */
+function prototypeLaunchProgram(makefileJsonObject) { }
+
+/**
+ * @param {MakefileConfigEntry} makefileJsonObject
+ */
+function prototypeUpdateRunArgs(makefileJsonObject) { }
+
+/**
+ * @param {MakefileConfigEntry} makefileJsonObject
+ * @param {CompileProfile} compileProfile
+ */
+function prototypeUpdateCompileFlagsForProfile(makefileJsonObject, compileProfile) { }
+
+/**
+ * @param {MakefileConfigEntry} makefileJsonObject
+ */
+function prototypeUpdateLinkFlags(makefileJsonObject) { }
 
 module.exports = {
     MenuNode,
-    PROGRAM_ACTION_MENU,
-    PROGRAM_ACTION,
     prototypeLaunchProgram,
     prototypeUpdateRunArgs,
     prototypeUpdateCompileFlagsForProfile,
