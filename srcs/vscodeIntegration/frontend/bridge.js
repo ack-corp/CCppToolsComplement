@@ -25,8 +25,13 @@ async function launchProgram(args) {
   return true;
 }
 
-
 async function deleteEntry(args) {
+  await deleteEntryHelper(args);
+  await deleteAllMakefiles(args);
+  await generateAllMakefiles(args);
+}
+
+async function deleteEntryHelper(args) {
   const [workspaceFolder, entryIndex, pythonBin, pythonPathRoot] = args;
   if (!Number.isInteger(entryIndex) || entryIndex < 0) {
     throw new Error("Selected program index is invalid.");
@@ -40,7 +45,6 @@ async function deleteEntry(args) {
     true,
     [String(entryIndex)]
   );
-  await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, true);
 }
 
 async function deleteAllMakefiles(args) {
@@ -50,6 +54,17 @@ async function deleteAllMakefiles(args) {
     pythonBin,
     pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.deleteAllMakeFiles`,
+    false
+  );
+}
+
+async function generateAllMakefiles(args) {
+  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
+  await runPythonModuleTask(
+    workspaceFolder,
+    pythonBin,
+    pythonPathRoot,
+    `${PYTHON_MODULE_PREFIX}.generateMakefileFromJson`,
     false
   );
 }
@@ -184,6 +199,7 @@ module.exports = {
   updateLinkFlags,
   deleteEntry,
   deleteAllMakefiles,
+  generateAllMakefiles,
   getProgramNameFromEntry,
   getCompileProfileLabel
 };
