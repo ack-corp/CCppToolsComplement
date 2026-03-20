@@ -7,50 +7,67 @@ async function pickProgram(workspaceFolder, pythonBin, pythonPathRoot) {
   await runMenu(menu);
 }
 
+function getMenuItems(currentMenu, includeBack) {
+  const items = currentMenu.menuNodes.map((node) => ({
+    label: node.label,
+    description: node.description,
+    node
+  }));
+  if (includeBack) {
+    items.push({
+      label: "Back",
+      description: "Return to the previous menu",
+      node: null
+    });
+  }
+  return items;
+}
+
 async function runMenu(rootMenuNodes) {
-  const menuStack = [
-    {
-      menuNodes: rootMenuNodes,
-      placeHolder: "Select a program"
-    }
-  ];
-
-  while (menuStack.length > 0) {
-    const currentMenu = menuStack[menuStack.length - 1];
-    const items = currentMenu.menuNodes.map((node) => ({
-      label: node.label,
-      description: node.description,
-      node
-    }));
-
-    if (menuStack.length > 1) {
-      items.push({
-        label: "Back",
-        description: "Return to the previous menu",
-        node: null
-      });
-    }
-
+  const menuStack = createMenuStack(rootMenuNodes);
+  let shouldExitMenu = false;
+  while (!shouldExitMenu && menuStack.length > 0) {
+    const currentMenu = getCurrentMenu(menuStack);
+    const items = getMenuItems(currentMenu, canGoBack(menuStack));
     const selected = await pickQuickPickItem(items, currentMenu.placeHolder);
-
     if (!selected.node) {
-      menuStack.pop();
-      continue;
-    }
-
-    if (Array.isArray(selected.node.sub) && selected.node.sub.length > 0) {
-      menuStack.push({
-        menuNodes: selected.node.sub,
-        placeHolder: selected.node.label
-      });
-      continue;
-    }
-
-    const shouldExitMenu = await executeMenuNode(selected.node);
-    if (shouldExitMenu) {
-      break;
+      goBack(menuStack);
+    } else if (hasSubMenu(selected.node)) {
+      openSubMenu(menuStack, selected.node);
+    } else {
+      shouldExitMenu = await executeMenuNode(selected.node);
     }
   }
+}
+
+function createMenuStack(rootMenuNodes) {
+  return [{
+    menuNodes: rootMenuNodes,
+    placeHolder: "Select a program"
+  }];
+}
+
+function getCurrentMenu(menuStack) {
+  return menuStack[menuStack.length - 1];
+}
+
+function canGoBack(menuStack) {
+  return menuStack.length > 1;
+}
+
+function goBack(menuStack) {
+  menuStack.pop();
+}
+
+function hasSubMenu(node) {
+  return Array.isArray(node.sub) && node.sub.length > 0;
+}
+
+function openSubMenu(menuStack, node) {
+  menuStack.push({
+    menuNodes: node.sub,
+    placeHolder: node.label
+  });
 }
 
 async function executeMenuNode(node) {
