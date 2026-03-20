@@ -55,13 +55,11 @@ async function generateVscodeIntegration(args) {
 
 async function createLaunch(args) {
   await generateJson(args);
-  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
-  await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, true);
+  await regenerateLaunchFiles(args, true);
 }
 
 async function launchProgram(args) {
   const [workspaceFolder, entry, pythonBin, pythonPathRoot] = args;
-  await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, false);
   const launchConfig = getLaunchConfiguration(workspaceFolder, getProgramNameFromEntry(entry));
   const started = await vscode.debug.startDebugging(workspaceFolder, launchConfig);
   if (!started) {
@@ -105,6 +103,13 @@ async function deleteAllMakefiles(args) {
 
 async function generateAllMakefiles(args) {
   await generateMakefile(args);
+}
+
+async function regenerateLaunchFiles(args, regenerateMakefiles) {
+  if (regenerateMakefiles) {
+    await generateMakefile(args);
+  }
+  await generateVscodeIntegration(args);
 }
 
 // TODO: FROM HERE VERIFY THAT WHAT SHOULD BE BACKEND IS EFFECTIVELY BACKEND

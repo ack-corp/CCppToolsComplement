@@ -286,8 +286,6 @@ def getEntries(config_path: Path) -> tuple[list[JsonObject], list[str]]:
     if not isinstance(data, list):
         return [], [f"JSON root must be an array: {config_path}"]
     entries = [item for item in data if isinstance(item, dict)]
-    if not entries:
-        return [], [f"No program entries found in {config_path}"]
     return entries, []
 
 
