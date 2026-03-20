@@ -25,17 +25,9 @@ async function generateAndDebugFromCurrentFile() {
   const workspaceFolder = getWorkspaceFolder();
   const pythonBin = vscode.workspace.getConfiguration("ccppToolsComplement").get("pythonPath", "python3");
   const pythonPathRoot = getExtentionAbsolutePath(extensionContext, BACKEND_PYTHON_ROOT);
-
-  while (true) {
-    const launchConfig = await pickProgram(workspaceFolder, pythonBin, pythonPathRoot);
-    if (!launchConfig) {
-      continue;
-    }
-    const started = await vscode.debug.startDebugging(workspaceFolder, launchConfig);
-    if (!started) {
-      throw new Error("VSCode did not start the debugger.");
-    }
-    return;
+  let didStartDebugging = false;
+  while (!didStartDebugging) {
+    didStartDebugging = await pickProgram(workspaceFolder, pythonBin, pythonPathRoot);
   }
 }
 

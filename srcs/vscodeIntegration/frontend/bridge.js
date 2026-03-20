@@ -17,7 +17,12 @@ async function createLaunch(args) {
 async function launchProgram(args) {
   const [workspaceFolder, entry, pythonBin, pythonPathRoot] = args;
   await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, false);
-  return getLaunchConfiguration(workspaceFolder, getLaunchNameForEntry(entry));
+  const launchConfig = getLaunchConfiguration(workspaceFolder, getLaunchNameForEntry(entry));
+  const started = await vscode.debug.startDebugging(workspaceFolder, launchConfig);
+  if (!started) {
+    throw new Error("VSCode did not start the debugger.");
+  }
+  return true;
 }
 
 async function updateRunArgs(args) {
