@@ -1,51 +1,16 @@
 const vscode = require("vscode");
 const { createMenu } = require("./menuAsJson");
-const { createLaunch, deleteEntry } = require("./bridge");
+const { deleteEntry } = require("./bridge");
 
-const CREATE_LAUNCH_ACTION = "ccppToolsComplement.createLaunch";
 const MENU_RESULT_BACK = Symbol("menuBack");
 const MENU_RESULT_REFRESH = Symbol("menuRefresh");
 
 async function pickProgram(workspaceFolder, pythonBin, pythonPathRoot) {
   const menu = await createMenu(workspaceFolder, pythonBin, pythonPathRoot);
-  const selected = await pickMenuNode(menu, "Select a program");
-
-  if (selected.runner === createLaunch) {
-    return CREATE_LAUNCH_ACTION;
-  }
-
-  return menu.indexOf(selected);
-}
-
-async function handleProgramActions(workspaceFolder, entryIndex, pythonBin, pythonPathRoot) {
-  while (true) {
-    const menu = await createMenu(workspaceFolder, pythonBin, pythonPathRoot);
-    const entryNode = menu[entryIndex];
-
-    if (!entryNode || entryNode.runner === createLaunch) {
-      throw new Error("Selected program no longer exists in makefileConfig.json.");
-    }
-
-    const result = await runMenu(entryNode.sub, {
-      workspaceFolder,
-      entryIndex,
-      pythonBin,
-      pythonPathRoot
-    }, {
-      placeHolder: `Select an action for ${entryNode.label}`,
-      includeBack: true,
-      backLabel: "Back",
-      backDescription: "Return to the program list"
-    });
-
-    if (result === MENU_RESULT_BACK) {
-      return null;
-    }
-
-    if (result && result !== MENU_RESULT_REFRESH) {
-      return result;
-    }
-  }
+  return runMenu(menu, null, {
+    placeHolder: "Select a program",
+    includeBack: false
+  });
 }
 
 async function runMenu(menuNodes, context, options) {
@@ -79,12 +44,12 @@ async function runMenu(menuNodes, context, options) {
     return childResult === MENU_RESULT_BACK ? MENU_RESULT_REFRESH : childResult;
   }
 
-  return executeMenuNode(selected.node, context);
+  return executeMenuNode(selected.node);
 }
 
-async function executeMenuNode(node, context) {
+async function executeMenuNode(node) {
   if (typeof node.runner !== "function") {
-    throw new Error(`Unsupported menu action '${node.label}'.`);
+    return MENU_RESULT_REFRESH;
   }
 
   const result = await node.runner(node.args);
@@ -92,16 +57,6 @@ async function executeMenuNode(node, context) {
     return MENU_RESULT_BACK;
   }
   return result;
-}
-
-async function pickMenuNode(menuNodes, placeHolder) {
-  const items = menuNodes.map((node) => ({
-    label: node.label,
-    description: node.description,
-    node
-  }));
-  const selected = await pickQuickPickItem(items, placeHolder);
-  return selected.node;
 }
 
 async function pickQuickPickItem(items, placeHolder) {
@@ -117,7 +72,5 @@ async function pickQuickPickItem(items, placeHolder) {
 }
 
 module.exports = {
-  CREATE_LAUNCH_ACTION,
-  pickProgram,
-  handleProgramActions
+  pickProgram
 };

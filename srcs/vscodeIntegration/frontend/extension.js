@@ -1,7 +1,6 @@
 const vscode = require("vscode");
 const { getWorkspaceFolder, getExtentionAbsolutePath } = require("./utilsVsCode");
-const { createLaunch } = require("./bridge");
-const { CREATE_LAUNCH_ACTION, pickProgram, handleProgramActions } = require("./graphic");
+const { pickProgram } = require("./graphic");
 
 const COMMAND_ID = "ccppToolsComplement.generateAndDebugFromCurrentFile";
 const BACKEND_PYTHON_ROOT = "backend";
@@ -28,12 +27,7 @@ async function generateAndDebugFromCurrentFile() {
   const pythonPathRoot = getExtentionAbsolutePath(extensionContext, BACKEND_PYTHON_ROOT);
 
   while (true) {
-    const selection = await pickProgram(workspaceFolder, pythonBin, pythonPathRoot);
-    if (selection === CREATE_LAUNCH_ACTION) {
-      await createLaunch([workspaceFolder, pythonBin, pythonPathRoot]);
-      continue;
-    }
-    const launchConfig = await handleProgramActions(workspaceFolder, selection, pythonBin, pythonPathRoot);
+    const launchConfig = await pickProgram(workspaceFolder, pythonBin, pythonPathRoot);
     if (!launchConfig) {
       continue;
     }
