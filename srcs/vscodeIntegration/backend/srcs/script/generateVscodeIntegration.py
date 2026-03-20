@@ -141,7 +141,7 @@ def get_tasks_and_launches_from_config(workspace: Path, config_path: Path) -> tu
     return tasks, launches
 
 
-def generateVscodeIntegrationFromJson() -> None:
+def generateVscodeIntegration() -> None:
     if verifyjson() != 0:
         raise SystemExit("Makefile configuration verification failed.")
     workspace, config_path, tasks_path, launch_path = get_relevant_paths()
@@ -155,4 +155,4 @@ def generateVscodeIntegrationFromJson() -> None:
 
 
 if __name__ == "__main__":
-    generateVscodeIntegrationFromJson()
+    generateVscodeIntegration()

@@ -26,13 +26,13 @@ python3 -m srcs.script.verifyJson
 ## 3) Generate Makefiles from JSON
 
 ```bash
-python3 -m srcs.script.generateMakefileFromJson
+python3 -m srcs.script.generateMakefile
 ```
 
 ## 4) Generate VSCode tasks/launch
 
 ```bash
-python3 -m srcs.script.generateVscodeIntegrationFromJson
+python3 -m srcs.script.generateVscodeIntegration
 ```
 
 ## 5) Delete one config entry

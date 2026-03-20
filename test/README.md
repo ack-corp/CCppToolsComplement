@@ -16,10 +16,10 @@ What it does:
 - removes generated artifacts from `.vscode/` and `test/cProgram/`
 - updates `test/cProgram/subfolder/header.h`
 - runs `srcs.script.generateJson` for both sample programs
-- runs `srcs.script.generateMakefileFromJson`
+- runs `srcs.script.generateMakefile`
 - builds and executes both generated programs
 - checks the runtime output for two successive passes
-- runs `srcs.script.generateVscodeIntegrationFromJson`
+- runs `srcs.script.generateVscodeIntegration`
 
 Files used by the test:
 - `test/cProgram/main1.c`

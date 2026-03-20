@@ -1,7 +1,7 @@
 create delete option backend python script
 create input box / input logic from the front to replace the terminal input logic from the back
 update include before every launch
-
+carefull on generateVscodeIntegration.py to not erase field that are not managed by our extension
 
 ---------------
 

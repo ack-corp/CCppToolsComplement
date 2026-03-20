@@ -13,8 +13,8 @@ PYTHON = sys.executable
 C_PROGRAM_DIR = ROOT / "test" / "cProgram"
 BACKEND_PYTHON_ROOT = ROOT / "srcs" / "vscodeIntegration" / "backend"
 MODULE_GENERATE_JSON = "srcs.script.generateJson"
-MODULE_GENERATE_MAKEFILE = "srcs.script.generateMakefileFromJson"
-MODULE_GENERATE_VSCODE = "srcs.script.generateVscodeIntegrationFromJson"
+MODULE_GENERATE_MAKEFILE = "srcs.script.generateMakefile"
+MODULE_GENERATE_VSCODE = "srcs.script.generateVscodeIntegration"
 PROGRAMS = [
     {
         "main_rel": "test/cProgram/main1.c",

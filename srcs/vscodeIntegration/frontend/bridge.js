@@ -64,7 +64,7 @@ async function generateAllMakefiles(args) {
     workspaceFolder,
     pythonBin,
     pythonPathRoot,
-    `${PYTHON_MODULE_PREFIX}.generateMakefileFromJson`,
+    `${PYTHON_MODULE_PREFIX}.generateMakefile`,
     false
   );
 }
@@ -135,7 +135,7 @@ async function regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot,
       workspaceFolder,
       pythonBin,
       pythonPathRoot,
-      `${PYTHON_MODULE_PREFIX}.generateMakefileFromJson`,
+      `${PYTHON_MODULE_PREFIX}.generateMakefile`,
       false
     );
   }
@@ -143,7 +143,7 @@ async function regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot,
     workspaceFolder,
     pythonBin,
     pythonPathRoot,
-    `${PYTHON_MODULE_PREFIX}.generateVscodeIntegrationFromJson`,
+    `${PYTHON_MODULE_PREFIX}.generateVscodeIntegration`,
     false
   );
 }

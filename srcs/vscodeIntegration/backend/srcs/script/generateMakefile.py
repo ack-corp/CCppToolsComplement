@@ -196,7 +196,7 @@ def generatedParentMakefiles(programs_by_dir: dict[Path, set[str]]):
             print(f"  - {prog}")
 
 
-def generateMakefileFromJson() -> None:
+def generateMakefile() -> None:
     if verifyjson() != 0:
         raise SystemExit("Makefile configuration verification failed.")
     config_path = Path(".vscode/makefileConfig.json").resolve()
@@ -206,4 +206,4 @@ def generateMakefileFromJson() -> None:
 
 
 if __name__ == "__main__":
-    generateMakefileFromJson()
+    generateMakefile()
