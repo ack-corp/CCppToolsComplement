@@ -43,6 +43,17 @@ async function deleteEntry(args) {
   await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, true);
 }
 
+async function deleteAllMakefiles(args) {
+  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
+  await runPythonModuleTask(
+    workspaceFolder,
+    pythonBin,
+    pythonPathRoot,
+    `${PYTHON_MODULE_PREFIX}.deleteAllMakeFiles`,
+    false
+  );
+}
+
 // TODO: FROM HERE VERIFY THAT WHAT SHOULD BE BACKEND IS EFFECTIVELY BACKEND
 
 async function updateRunArgs(args) {
@@ -172,6 +183,7 @@ module.exports = {
   updateCompileFlagsForProfile,
   updateLinkFlags,
   deleteEntry,
+  deleteAllMakefiles,
   getProgramNameFromEntry,
   getCompileProfileLabel
 };
