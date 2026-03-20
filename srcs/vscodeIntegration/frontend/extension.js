@@ -30,7 +30,7 @@ async function generateAndDebugFromCurrentFile() {
   while (true) {
     const selection = await pickProgram(workspaceFolder, pythonBin, pythonPathRoot);
     if (selection === CREATE_LAUNCH_ACTION) {
-      await createLaunch(workspaceFolder, pythonBin, pythonPathRoot);
+      await createLaunch([workspaceFolder, pythonBin, pythonPathRoot]);
       continue;
     }
     const launchConfig = await handleProgramActions(workspaceFolder, selection, pythonBin, pythonPathRoot);

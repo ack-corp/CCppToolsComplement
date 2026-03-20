@@ -4,7 +4,15 @@
  */
 
 const { getMakefileConfigJson } = require("./utilsJson");
-const { getProgramNameFromEntry } = require("./bridge");
+const {
+    createLaunch,
+    launchProgram,
+    updateRunArgs,
+    updateCompileFlagsForProfile,
+    updateLinkFlags,
+    deleteEntry,
+    getProgramNameFromEntry
+} = require("./bridge");
 
 class MenuNode {
     constructor(label, description, runner = null, args = [], sub = []) {
@@ -21,9 +29,13 @@ class MenuNode {
 
 /**
  * @param {MakefileConfigEntry} makefileJsonObject
+ * @param {number} entryIndex
+ * @param {import("vscode").WorkspaceFolder} workspaceFolder
+ * @param {string} pythonBin
+ * @param {string} pythonPathRoot
  * @returns {MenuNode[]}
  */
-function createSubAction(makefileJsonObject) {
+function createSubAction(makefileJsonObject, entryIndex, workspaceFolder, pythonBin, pythonPathRoot) {
     const runArgsDescription =
         typeof makefileJsonObject.run_args === "string" && makefileJsonObject.run_args
             ? makefileJsonObject.run_args
@@ -40,15 +52,15 @@ function createSubAction(makefileJsonObject) {
         new MenuNode(
             "Launch program",
             "Build if needed and start the debugger",
-            prototypeLaunchProgram,
-            [makefileJsonObject],
+            launchProgram,
+            [workspaceFolder, makefileJsonObject, pythonBin, pythonPathRoot],
             []
         ),
         new MenuNode(
             "Set args",
             runArgsDescription,
-            prototypeUpdateRunArgs,
-            [makefileJsonObject],
+            updateRunArgs,
+            [workspaceFolder, entryIndex, pythonBin, pythonPathRoot],
             []
         ),
         new MenuNode(
@@ -56,26 +68,26 @@ function createSubAction(makefileJsonObject) {
             compileProfiles.length > 0 ? "Select the compile profile to edit" : "No compile profiles",
             null,
             [],
-            compileProfiles.map((compileProfile) => new MenuNode(
+            compileProfiles.map((compileProfile, profileIndex) => new MenuNode(
                 `${compileProfile.compiler} ${compileProfile.ext}`.trim(),
                 typeof compileProfile.flags === "string" && compileProfile.flags ? compileProfile.flags : "(empty)",
-                prototypeUpdateCompileFlagsForProfile,
-                [makefileJsonObject, compileProfile],
+                updateCompileFlagsForProfile,
+                [workspaceFolder, entryIndex, profileIndex, pythonBin, pythonPathRoot],
                 []
             ))
         ),
         new MenuNode(
             "Set link flags",
             linkFlagsDescription,
-            prototypeUpdateLinkFlags,
-            [makefileJsonObject],
+            updateLinkFlags,
+            [workspaceFolder, entryIndex, pythonBin, pythonPathRoot],
             []
         ),
         new MenuNode(
             "Delete entry",
             "Remove this program entry from makefileConfig.json",
-            prototypeDeleteEntry,
-            [makefileJsonObject],
+            deleteEntry,
+            [workspaceFolder, entryIndex, pythonBin, pythonPathRoot],
             []
         )
     ]
@@ -83,17 +95,20 @@ function createSubAction(makefileJsonObject) {
 
 /**
  * @param {MakefileConfigEntry[]} makefileJsonObject
+ * @param {import("vscode").WorkspaceFolder} workspaceFolder
+ * @param {string} pythonBin
+ * @param {string} pythonPathRoot
  * @returns {MenuNode[]}
  */
-function createAction(makefileJsonObject) {
+function createAction(makefileJsonObject, workspaceFolder, pythonBin, pythonPathRoot) {
     const menuAction = []
-    for (const entry of makefileJsonObject) {
+    for (const [entryIndex, entry] of makefileJsonObject.entries()) {
         menuAction.push(new MenuNode(
             getProgramNameFromEntry(entry),
             "Options for: " + getProgramNameFromEntry(entry),
             null,
             [],
-            createSubAction(entry)
+            createSubAction(entry, entryIndex, workspaceFolder, pythonBin, pythonPathRoot)
         ))
     }
     return menuAction;
@@ -107,58 +122,20 @@ function createAction(makefileJsonObject) {
 async function createMenu(workspaceFolder, pythonBin, pythonPathRoot) {
     /** @type {MakefileConfigEntry[]} */
     const makefileConfigJson = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
-    const menu = createAction(makefileConfigJson);
+    const menu = createAction(makefileConfigJson, workspaceFolder, pythonBin, pythonPathRoot);
     menu.push(
         new MenuNode(
             "Create new launch",
             "Add a new program entry and regenerate VS Code launch.json",
-            prototypeCreateLaunch,
-            [],
+            createLaunch,
+            [workspaceFolder, pythonBin, pythonPathRoot],
             []
         )
     );
     return menu;
 }
 
-
-/**
- * @param {MakefileConfigEntry} makefileJsonObject
- */
-function prototypeLaunchProgram(makefileJsonObject) { }
-
-/**
- * @param {MakefileConfigEntry} makefileJsonObject
- */
-function prototypeUpdateRunArgs(makefileJsonObject) { }
-
-/**
- * @param {MakefileConfigEntry} makefileJsonObject
- * @param {CompileProfile} compileProfile
- */
-function prototypeUpdateCompileFlagsForProfile(makefileJsonObject, compileProfile) { }
-
-/**
- * @param {MakefileConfigEntry} makefileJsonObject
- */
-function prototypeUpdateLinkFlags(makefileJsonObject) { }
-
-/**
- * @param {MakefileConfigEntry} makefileJsonObject
- */
-function prototypeDeleteEntry(makefileJsonObject) { }
-
-/**
- * Prototype for the top-level "Create new launch" action.
- */
-function prototypeCreateLaunch() { }
-
 module.exports = {
     MenuNode,
     createMenu,
-    prototypeLaunchProgram,
-    prototypeUpdateRunArgs,
-    prototypeUpdateCompileFlagsForProfile,
-    prototypeUpdateLinkFlags,
-    prototypeDeleteEntry,
-    prototypeCreateLaunch
 };

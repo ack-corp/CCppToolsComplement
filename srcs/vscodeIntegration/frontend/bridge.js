@@ -8,17 +8,20 @@ const CONFIG_REL_PATH = path.join(".vscode", "makefileConfig.json");
 const LAUNCH_REL_PATH = path.join(".vscode", "launch.json");
 const PYTHON_MODULE_PREFIX = "srcs.script";
 
-async function createLaunch(workspaceFolder, pythonBin, pythonPathRoot) {
+async function createLaunch(args) {
+  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
   await runPythonModuleTask(workspaceFolder, pythonBin, pythonPathRoot, `${PYTHON_MODULE_PREFIX}.generateJson`, true);
   await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, true);
 }
 
-async function launchProgram(workspaceFolder, entry, pythonBin, pythonPathRoot) {
+async function launchProgram(args) {
+  const [workspaceFolder, entry, pythonBin, pythonPathRoot] = args;
   await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, false);
   return getLaunchConfiguration(workspaceFolder, getLaunchNameForEntry(entry));
 }
 
-async function updateRunArgs(workspaceFolder, entryIndex, pythonBin, pythonPathRoot) {
+async function updateRunArgs(args) {
+  const [workspaceFolder, entryIndex, pythonBin, pythonPathRoot] = args;
   const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
   const entry = entries[entryIndex];
   const value = await vscode.window.showInputBox({
@@ -34,7 +37,8 @@ async function updateRunArgs(workspaceFolder, entryIndex, pythonBin, pythonPathR
   await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, false);
 }
 
-async function updateCompileFlagsForProfile(workspaceFolder, entryIndex, profileIndex, pythonBin, pythonPathRoot) {
+async function updateCompileFlagsForProfile(args) {
+  const [workspaceFolder, entryIndex, profileIndex, pythonBin, pythonPathRoot] = args;
   const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
   const entry = entries[entryIndex];
   const originalProfiles = Array.isArray(entry.compile_profiles) ? entry.compile_profiles : [];
@@ -57,7 +61,8 @@ async function updateCompileFlagsForProfile(workspaceFolder, entryIndex, profile
   await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, true);
 }
 
-async function updateLinkFlags(workspaceFolder, entryIndex, pythonBin, pythonPathRoot) {
+async function updateLinkFlags(args) {
+  const [workspaceFolder, entryIndex, pythonBin, pythonPathRoot] = args;
   const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
   const entry = entries[entryIndex];
   const value = await vscode.window.showInputBox({
@@ -73,7 +78,8 @@ async function updateLinkFlags(workspaceFolder, entryIndex, pythonBin, pythonPat
   await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, true);
 }
 
-async function deleteEntry(workspaceFolder, entryIndex, pythonBin, pythonPathRoot) {
+async function deleteEntry(args) {
+  const [workspaceFolder, entryIndex, pythonBin, pythonPathRoot] = args;
   const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
   if (entryIndex < 0 || entryIndex >= entries.length) {
     throw new Error("Selected program no longer exists in makefileConfig.json.");

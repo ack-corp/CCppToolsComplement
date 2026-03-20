@@ -1,20 +1,6 @@
 const vscode = require("vscode");
-const {
-  createMenu,
-  prototypeLaunchProgram,
-  prototypeUpdateRunArgs,
-  prototypeUpdateCompileFlagsForProfile,
-  prototypeUpdateLinkFlags,
-  prototypeDeleteEntry,
-  prototypeCreateLaunch
-} = require("./menuAsJson");
-const {
-  launchProgram,
-  updateRunArgs,
-  updateCompileFlagsForProfile,
-  updateLinkFlags,
-  deleteEntry
-} = require("./bridge");
+const { createMenu } = require("./menuAsJson");
+const { createLaunch, deleteEntry } = require("./bridge");
 
 const CREATE_LAUNCH_ACTION = "ccppToolsComplement.createLaunch";
 const MENU_RESULT_BACK = Symbol("menuBack");
@@ -24,7 +10,7 @@ async function pickProgram(workspaceFolder, pythonBin, pythonPathRoot) {
   const menu = await createMenu(workspaceFolder, pythonBin, pythonPathRoot);
   const selected = await pickMenuNode(menu, "Select a program");
 
-  if (selected.runner === prototypeCreateLaunch) {
+  if (selected.runner === createLaunch) {
     return CREATE_LAUNCH_ACTION;
   }
 
@@ -36,7 +22,7 @@ async function handleProgramActions(workspaceFolder, entryIndex, pythonBin, pyth
     const menu = await createMenu(workspaceFolder, pythonBin, pythonPathRoot);
     const entryNode = menu[entryIndex];
 
-    if (!entryNode || entryNode.runner === prototypeCreateLaunch) {
+    if (!entryNode || entryNode.runner === createLaunch) {
       throw new Error("Selected program no longer exists in makefileConfig.json.");
     }
 
@@ -97,76 +83,15 @@ async function runMenu(menuNodes, context, options) {
 }
 
 async function executeMenuNode(node, context) {
-  if (node.runner === prototypeLaunchProgram) {
-    const [entry] = node.args;
-    return launchProgram(
-      context.workspaceFolder,
-      entry,
-      context.pythonBin,
-      context.pythonPathRoot
-    );
+  if (typeof node.runner !== "function") {
+    throw new Error(`Unsupported menu action '${node.label}'.`);
   }
 
-  if (node.runner === prototypeUpdateRunArgs) {
-    await updateRunArgs(
-      context.workspaceFolder,
-      context.entryIndex,
-      context.pythonBin,
-      context.pythonPathRoot
-    );
-    return MENU_RESULT_REFRESH;
-  }
-
-  if (node.runner === prototypeUpdateCompileFlagsForProfile) {
-    const [entry, compileProfile] = node.args;
-    const profileIndex = getCompileProfileIndex(entry, compileProfile);
-
-    await updateCompileFlagsForProfile(
-      context.workspaceFolder,
-      context.entryIndex,
-      profileIndex,
-      context.pythonBin,
-      context.pythonPathRoot
-    );
-    return MENU_RESULT_REFRESH;
-  }
-
-  if (node.runner === prototypeUpdateLinkFlags) {
-    await updateLinkFlags(
-      context.workspaceFolder,
-      context.entryIndex,
-      context.pythonBin,
-      context.pythonPathRoot
-    );
-    return MENU_RESULT_REFRESH;
-  }
-
-  if (node.runner === prototypeDeleteEntry) {
-    await deleteEntry(
-      context.workspaceFolder,
-      context.entryIndex,
-      context.pythonBin,
-      context.pythonPathRoot
-    );
+  const result = await node.runner(node.args);
+  if (node.runner === deleteEntry) {
     return MENU_RESULT_BACK;
   }
-
-  if (node.runner === prototypeCreateLaunch) {
-    return CREATE_LAUNCH_ACTION;
-  }
-
-  throw new Error(`Unsupported menu action '${node.label}'.`);
-}
-
-function getCompileProfileIndex(entry, compileProfile) {
-  const profiles = Array.isArray(entry.compile_profiles) ? entry.compile_profiles : [];
-  const profileIndex = profiles.indexOf(compileProfile);
-
-  if (profileIndex < 0) {
-    throw new Error("Compile profile could not be updated.");
-  }
-
-  return profileIndex;
+  return result;
 }
 
 async function pickMenuNode(menuNodes, placeHolder) {
