@@ -1,99 +1,61 @@
 const vscode = require("vscode");
-const { getMakefileConfigJson } = require("./utilsJson");
+const {
+  createMenu,
+  prototypeLaunchProgram,
+  prototypeUpdateRunArgs,
+  prototypeUpdateCompileFlagsForProfile,
+  prototypeUpdateLinkFlags,
+  prototypeDeleteEntry,
+  prototypeCreateLaunch
+} = require("./menuAsJson");
 const {
   launchProgram,
   updateRunArgs,
   updateCompileFlagsForProfile,
   updateLinkFlags,
-  getProgramNameFromEntry,
-  getCompileProfileLabel
+  deleteEntry
 } = require("./bridge");
-
 
 const CREATE_LAUNCH_ACTION = "ccppToolsComplement.createLaunch";
 const MENU_RESULT_BACK = Symbol("menuBack");
 const MENU_RESULT_REFRESH = Symbol("menuRefresh");
 
-const PROGRAM_ACTION_MENU = [
-  {
-    label: "Launch program",
-    description: "Build if needed and start the debugger",
-    run: async (context) => launchProgram(
-      context.workspaceFolder,
-      context.entry,
-      context.pythonBin,
-      context.pythonPathRoot
-    )
-  },
-  {
-    label: "Set args",
-    description: (context) => getRunArgsDescription(context.entry),
-    run: async (context) => {
-      await updateRunArgs(context.workspaceFolder, context.entryIndex, context.pythonBin, context.pythonPathRoot);
-      return MENU_RESULT_REFRESH;
-    }
-  },
-  {
-    label: "Set compile flags",
-    description: (context) => getCompileFlagsSummary(context.entry),
-    childPlaceHolder: (context) => `Select compile flags to edit for ${getProgramNameFromEntry(context.entry)}`,
-    children: (context) => getCompileProfileMenu(context.entry)
-  },
-  {
-    label: "Set link flags",
-    description: (context) => getLinkFlagsDescription(context.entry),
-    run: async (context) => {
-      await updateLinkFlags(context.workspaceFolder, context.entryIndex, context.pythonBin, context.pythonPathRoot);
-      return MENU_RESULT_REFRESH;
-    }
-  }
-];
-
 async function pickProgram(workspaceFolder, pythonBin, pythonPathRoot) {
-  const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
-  const items = entries.map((entry, index) => ({
-    label: getProgramNameFromEntry(entry),
-    description: getProgramDescription(entry),
-    entryIndex: index
-  }));
-  items.push({
-    label: "Create new launch",
-    description: "Add a new program entry and regenerate VS Code launch.json",
-    entryIndex: CREATE_LAUNCH_ACTION
-  });
+  const menu = await createMenu(workspaceFolder, pythonBin, pythonPathRoot);
+  const selected = await pickMenuNode(menu, "Select a program");
 
-  const selected = await vscode.window.showQuickPick(items, {
-    placeHolder: "Select a program"
-  });
-  if (!selected) {
-    throw new Error("Program selection was cancelled.");
+  if (selected.runner === prototypeCreateLaunch) {
+    return CREATE_LAUNCH_ACTION;
   }
-  return selected.entryIndex;
+
+  return menu.indexOf(selected);
 }
 
 async function handleProgramActions(workspaceFolder, entryIndex, pythonBin, pythonPathRoot) {
   while (true) {
-    const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
-    const entry = entries[entryIndex];
-    if (!entry) {
+    const menu = await createMenu(workspaceFolder, pythonBin, pythonPathRoot);
+    const entryNode = menu[entryIndex];
+
+    if (!entryNode || entryNode.runner === prototypeCreateLaunch) {
       throw new Error("Selected program no longer exists in makefileConfig.json.");
     }
 
-    const result = await runMenu(PROGRAM_ACTION_MENU, {
+    const result = await runMenu(entryNode.sub, {
       workspaceFolder,
       entryIndex,
       pythonBin,
-      pythonPathRoot,
-      entry
+      pythonPathRoot
     }, {
-      placeHolder: `Select an action for ${getProgramNameFromEntry(entry)}`,
+      placeHolder: `Select an action for ${entryNode.label}`,
       includeBack: true,
       backLabel: "Back",
       backDescription: "Return to the program list"
     });
+
     if (result === MENU_RESULT_BACK) {
       return null;
     }
+
     if (result && result !== MENU_RESULT_REFRESH) {
       return result;
     }
@@ -101,106 +63,131 @@ async function handleProgramActions(workspaceFolder, entryIndex, pythonBin, pyth
 }
 
 async function runMenu(menuNodes, context, options) {
-  const resolvedItems = await Promise.all(menuNodes.map((node) => resolveMenuNode(node, context)));
+  const items = menuNodes.map((node) => ({
+    label: node.label,
+    description: node.description,
+    node
+  }));
+
   if (options.includeBack) {
-    resolvedItems.push({
+    items.push({
       label: options.backLabel,
       description: options.backDescription,
-      run: async () => MENU_RESULT_BACK
+      node: null
     });
   }
-  const selected = await pickMenuItem(resolvedItems, options.placeHolder);
-  if (selected.children) {
-    const childResult = await runMenu(selected.children, context, {
-      placeHolder: selected.childPlaceHolder || selected.label,
+
+  const selected = await pickQuickPickItem(items, options.placeHolder);
+
+  if (!selected.node) {
+    return MENU_RESULT_BACK;
+  }
+
+  if (Array.isArray(selected.node.sub) && selected.node.sub.length > 0) {
+    const childResult = await runMenu(selected.node.sub, context, {
+      placeHolder: selected.node.label,
       includeBack: true,
       backLabel: "Back",
       backDescription: "Return to the previous menu"
     });
     return childResult === MENU_RESULT_BACK ? MENU_RESULT_REFRESH : childResult;
   }
-  return selected.run(context);
+
+  return executeMenuNode(selected.node, context);
 }
 
-async function resolveMenuNode(node, context) {
-  const resolvedNode = {
-    label: resolveMenuValue(node.label, context),
-    description: resolveMenuValue(node.description, context)
-  };
-  if (node.run) {
-    resolvedNode.run = node.run;
+async function executeMenuNode(node, context) {
+  if (node.runner === prototypeLaunchProgram) {
+    const [entry] = node.args;
+    return launchProgram(
+      context.workspaceFolder,
+      entry,
+      context.pythonBin,
+      context.pythonPathRoot
+    );
   }
-  if (node.children) {
-    resolvedNode.children = typeof node.children === "function" ? await node.children(context) : node.children;
-    resolvedNode.childPlaceHolder = resolveMenuValue(node.childPlaceHolder, context);
+
+  if (node.runner === prototypeUpdateRunArgs) {
+    await updateRunArgs(
+      context.workspaceFolder,
+      context.entryIndex,
+      context.pythonBin,
+      context.pythonPathRoot
+    );
+    return MENU_RESULT_REFRESH;
   }
-  return resolvedNode;
-}
 
-function resolveMenuValue(value, context) {
-  return typeof value === "function" ? value(context) : value;
-}
+  if (node.runner === prototypeUpdateCompileFlagsForProfile) {
+    const [entry, compileProfile] = node.args;
+    const profileIndex = getCompileProfileIndex(entry, compileProfile);
 
-function getProgramDescription(entry) {
-  const binName = typeof entry.bin_name === "string" ? entry.bin_name : "";
-  const runArgs = getRunArgsDescription(entry);
-  if (!binName) {
-    return runArgs;
+    await updateCompileFlagsForProfile(
+      context.workspaceFolder,
+      context.entryIndex,
+      profileIndex,
+      context.pythonBin,
+      context.pythonPathRoot
+    );
+    return MENU_RESULT_REFRESH;
   }
-  return `${binName} | ${runArgs}`;
-}
 
-function getRunArgsDescription(entry) {
-  return typeof entry.run_args === "string" && entry.run_args ? entry.run_args : "No args";
-}
-
-function getCompileFlagsSummary(entry) {
-  const profiles = Array.isArray(entry.compile_profiles) ? entry.compile_profiles.filter(isObject) : [];
-  if (profiles.length === 0) {
-    return "No compile profiles";
+  if (node.runner === prototypeUpdateLinkFlags) {
+    await updateLinkFlags(
+      context.workspaceFolder,
+      context.entryIndex,
+      context.pythonBin,
+      context.pythonPathRoot
+    );
+    return MENU_RESULT_REFRESH;
   }
-  return profiles
-    .map((profile) => getCompileProfileLabel(profile))
-    .join(", ");
+
+  if (node.runner === prototypeDeleteEntry) {
+    await deleteEntry(
+      context.workspaceFolder,
+      context.entryIndex,
+      context.pythonBin,
+      context.pythonPathRoot
+    );
+    return MENU_RESULT_BACK;
+  }
+
+  if (node.runner === prototypeCreateLaunch) {
+    return CREATE_LAUNCH_ACTION;
+  }
+
+  throw new Error(`Unsupported menu action '${node.label}'.`);
 }
 
-function getLinkFlagsDescription(entry) {
-  return typeof entry.link_flags === "string" && entry.link_flags ? entry.link_flags : "(empty)";
+function getCompileProfileIndex(entry, compileProfile) {
+  const profiles = Array.isArray(entry.compile_profiles) ? entry.compile_profiles : [];
+  const profileIndex = profiles.indexOf(compileProfile);
+
+  if (profileIndex < 0) {
+    throw new Error("Compile profile could not be updated.");
+  }
+
+  return profileIndex;
 }
 
-function getCompileProfileMenu(entry) {
-  const profiles = Array.isArray(entry.compile_profiles) ? entry.compile_profiles.filter(isObject) : [];
-  return profiles.map((profile, index) => ({
-    label: getCompileProfileLabel(profile),
-    description: getCompileProfileFlagsDescription(profile),
-    run: async (context) => {
-      await updateCompileFlagsForProfile(
-        context.workspaceFolder,
-        context.entryIndex,
-        index,
-        context.pythonBin,
-        context.pythonPathRoot
-      );
-      return MENU_RESULT_REFRESH;
-    }
+async function pickMenuNode(menuNodes, placeHolder) {
+  const items = menuNodes.map((node) => ({
+    label: node.label,
+    description: node.description,
+    node
   }));
+  const selected = await pickQuickPickItem(items, placeHolder);
+  return selected.node;
 }
 
-function getCompileProfileFlagsDescription(profile) {
-  return typeof profile.flags === "string" && profile.flags ? profile.flags : "(empty)";
-}
-
-function isObject(value) {
-  return Boolean(value) && typeof value === "object";
-}
-
-async function pickMenuItem(items, placeHolder) {
+async function pickQuickPickItem(items, placeHolder) {
   const selected = await vscode.window.showQuickPick(items, {
     placeHolder
   });
+
   if (!selected) {
     throw new Error("Menu selection was cancelled.");
   }
+
   return selected;
 }
 

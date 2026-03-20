@@ -73,6 +73,16 @@ async function updateLinkFlags(workspaceFolder, entryIndex, pythonBin, pythonPat
   await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, true);
 }
 
+async function deleteEntry(workspaceFolder, entryIndex, pythonBin, pythonPathRoot) {
+  const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
+  if (entryIndex < 0 || entryIndex >= entries.length) {
+    throw new Error("Selected program no longer exists in makefileConfig.json.");
+  }
+  entries.splice(entryIndex, 1);
+  saveConfigEntries(entries);
+  await regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, true);
+}
+
 async function regenerateLaunchFiles(workspaceFolder, pythonBin, pythonPathRoot, regenerateMakefiles) {
   if (regenerateMakefiles) {
     await runPythonModuleTask(
@@ -141,6 +151,7 @@ module.exports = {
   updateRunArgs,
   updateCompileFlagsForProfile,
   updateLinkFlags,
+  deleteEntry,
   getProgramNameFromEntry,
   getCompileProfileLabel
 };
