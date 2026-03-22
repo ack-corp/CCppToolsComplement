@@ -44,11 +44,17 @@ function buildFormHtml(title, description, fields) {
       --input-bg: var(--vscode-input-background);
       --input-fg: var(--vscode-input-foreground);
       --input-border: var(--vscode-input-border);
-      --button-bg: var(--vscode-button-background);
-      --button-fg: var(--vscode-button-foreground);
-      --button-hover: var(--vscode-button-hoverBackground);
-      --secondary-bg: var(--vscode-button-secondaryBackground);
-      --secondary-fg: var(--vscode-button-secondaryForeground);
+      --accent: #ff4fa3;
+      --accent-soft: rgba(255, 79, 163, 0.16);
+      --accent-strong: #ff2a8a;
+      --accent-ink: #2a0717;
+      --focus-accent: #8f8f95;
+      --focus-soft: rgba(143, 143, 149, 0.12);
+      --button-bg: rgba(0, 0, 0, 0.72);
+      --button-fg: #f5f5f5;
+      --button-hover: rgba(0, 0, 0, 0.84);
+      --secondary-bg: rgba(0, 0, 0, 0.62);
+      --secondary-fg: #f5f5f5;
       --danger: #d14d41;
     }
 
@@ -57,7 +63,9 @@ function buildFormHtml(title, description, fields) {
     body {
       margin: 0;
       background:
-        radial-gradient(circle at top, color-mix(in srgb, var(--bg) 88%, transparent), var(--bg));
+        radial-gradient(circle at top, rgba(255, 79, 163, 0.08), transparent 36%),
+        radial-gradient(circle at bottom, rgba(255, 79, 163, 0.05), transparent 42%),
+        var(--bg);
       color: var(--fg);
       font: 15px/1.5 Georgia, "Times New Roman", serif;
     }
@@ -71,21 +79,27 @@ function buildFormHtml(title, description, fields) {
 
     .panel {
       width: min(760px, 100%);
-      border: 1px solid var(--border);
+      border: 1px solid color-mix(in srgb, var(--border) 82%, rgba(255, 255, 255, 0.04) 18%);
       border-radius: 18px;
       padding: 24px;
-      background: color-mix(in srgb, var(--bg) 94%, black 6%);
-      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+      background:
+        linear-gradient(180deg, rgba(255, 79, 163, 0.05), transparent 22%),
+        color-mix(in srgb, var(--bg) 96%, black 4%);
+      box-shadow:
+        0 22px 60px rgba(0, 0, 0, 0.34),
+        0 0 0 1px rgba(255, 79, 163, 0.05) inset;
     }
 
     h1 {
-      margin: 0 0 8px;
+      margin: 0 0 4px;
       font-size: 28px;
       line-height: 1.1;
+      color: #f5f5f5;
+      text-shadow: 0 0 18px rgba(255, 79, 163, 0.08);
     }
 
     .lead {
-      margin: 0 0 22px;
+      margin: 0 0 18px;
       color: var(--muted);
     }
 
@@ -103,21 +117,30 @@ function buildFormHtml(title, description, fields) {
       font-size: 14px;
       font-weight: 700;
       letter-spacing: 0.01em;
+      color: #f5f5f5;
     }
 
     input, textarea {
       width: 100%;
       border-radius: 12px;
-      border: 1px solid var(--input-border);
+      border: 1px solid color-mix(in srgb, var(--input-border) 88%, rgba(255, 255, 255, 0.04) 12%);
       background: var(--input-bg);
       color: var(--input-fg);
       padding: 14px 16px;
       font: 14px/1.5 Consolas, "Liberation Mono", monospace;
+      transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
     }
 
     textarea {
       min-height: 180px;
       resize: vertical;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--focus-accent);
+      box-shadow:
+        0 0 0 1px rgba(143, 143, 149, 0.28);
     }
 
     .help {
@@ -145,19 +168,52 @@ function buildFormHtml(title, description, fields) {
       padding: 10px 18px;
       cursor: pointer;
       font: inherit;
+      transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
     }
 
     .secondary {
       background: var(--secondary-bg);
       color: var(--secondary-fg);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 0 0 1px rgba(0, 0, 0, 0.48);
     }
 
     .primary {
       background: var(--button-bg);
       color: var(--button-fg);
+      font-weight: 700;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 0 0 1px rgba(0, 0, 0, 0.48);
     }
 
-    .primary:hover { background: var(--button-hover); }
+    .primary:hover,
+    .secondary:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary:hover {
+      background: var(--button-hover);
+      box-shadow:
+        0 0 16px rgba(143, 143, 149, 0.14),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+    }
+
+    .secondary:hover {
+      background: rgba(0, 0, 0, 0.78);
+      box-shadow:
+        0 0 14px rgba(143, 143, 149, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    }
+
+    .primary:focus-visible,
+    .secondary:focus-visible {
+      outline: none;
+      box-shadow:
+        0 0 0 1px rgba(143, 143, 149, 0.34),
+        0 0 12px rgba(143, 143, 149, 0.14);
+    }
   </style>
 </head>
 <body>
@@ -263,13 +319,6 @@ function buildFormHtml(title, description, fields) {
       form.appendChild(node);
       const input = node.querySelector("input, textarea");
       input.addEventListener("input", () => validateField(field));
-    }
-
-    const firstInput = form.querySelector("input, textarea");
-    if (firstInput) {
-      firstInput.focus();
-      const cursorPosition = firstInput.value.length;
-      firstInput.setSelectionRange?.(cursorPosition, cursorPosition);
     }
 
     save.addEventListener("click", () => {
