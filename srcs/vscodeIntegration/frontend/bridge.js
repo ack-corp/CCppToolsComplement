@@ -76,6 +76,7 @@ async function deleteAllMakefiles(args) {
 
 module.exports = {
   generateJson,
+  verifyJson,
   generateMakefile,
   generateVscodeIntegration,
   deleteEntryHelper,

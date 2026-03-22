@@ -1,10 +1,9 @@
 const fs = require("fs");
 const path = require("path");
+const { verifyJson } = require("./bridge");
 const { getPathFromWorkspace } = require("./utilsVsCode");
-const { runPythonModuleTask } = require("./pythonRunner");
 
 const CONFIG_REL_PATH = path.join(".vscode", "makefileConfig.json");
-const PYTHON_MODULE_PREFIX = "srcs.script";
 
 function readJsonFile(filePath) {
   try {
@@ -23,14 +22,7 @@ async function getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot)
   if (!fs.existsSync(configPath)) {
     return [];
   }
-  const status = await runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
-    `${PYTHON_MODULE_PREFIX}.verifyJson`,
-    false,
-    false
-  );
+  const status = await verifyJson([workspaceFolder, pythonBin, pythonPathRoot], false);
   if (status !== 0) {
     throw new Error(`Config file '${configPath}' contain errors.`);
   }
