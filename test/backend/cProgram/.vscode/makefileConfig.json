@@ -1,17 +1,17 @@
 [
   {
-    "output_makefile": "Makefile.main1",
+    "output_makefile": "Makefile.main",
     "compile_profiles": [
       {
         "ext": ".c",
         "compiler": "gcc",
-        "flags": "-Wall -Wextra -Werror"
+        "flags": "-Wall"
       }
     ],
     "link_compiler": "gcc",
-    "link_flags": "-Wall -Werror",
-    "run_args": "try this string",
-    "bin_name": "main1.out",
+    "link_flags": "-Wall",
+    "run_args": "-Wall",
+    "bin_name": "main.out",
     "rel_sources": [
       "main1.c",
       "one.c",

@@ -1,19 +1,19 @@
 all:
-	$(MAKE) -f Makefile.main1 all
+	$(MAKE) -f Makefile.main all
 
-main1Build:
-	$(MAKE) -f Makefile.main1 all
+mainBuild:
+	$(MAKE) -f Makefile.main all
 
 
-main1Run:
-	$(MAKE) -f Makefile.main1 run
+mainRun:
+	$(MAKE) -f Makefile.main run
 
 clean:
-	$(MAKE) -f Makefile.main1 clean
+	$(MAKE) -f Makefile.main clean
 
 fclean:
-	$(MAKE) -f Makefile.main1 fclean
+	$(MAKE) -f Makefile.main fclean
 
 re: fclean all
 
-.PHONY: all main1Build main1Run clean fclean re
+.PHONY: all mainBuild mainRun clean fclean re

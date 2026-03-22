@@ -268,7 +268,8 @@ function buildFormHtml(title, description, fields) {
     const firstInput = form.querySelector("input, textarea");
     if (firstInput) {
       firstInput.focus();
-      firstInput.setSelectionRange?.(0, firstInput.value.length);
+      const cursorPosition = firstInput.value.length;
+      firstInput.setSelectionRange?.(cursorPosition, cursorPosition);
     }
 
     save.addEventListener("click", () => {
