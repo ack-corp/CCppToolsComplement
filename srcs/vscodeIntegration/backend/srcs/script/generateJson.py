@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+import argparse
 import re
 import os
 import json
 from pathlib import Path
 from typing import Optional
 
-from srcs.script.utils import compiler_var_key, getCompiler
+from srcs.script.utils import getCompiler
 
 SRC_EXTS = [".cpp", ".cc", ".cxx", ".c"]
 HDR_EXTS = [".hpp", ".hh", ".hxx", ".h"]
@@ -100,17 +101,36 @@ def program_from_submake(path: Path) -> Optional[str]:
     return prog or None
 
 
-def getVariableData() -> tuple[str, str, str, str, str]:
-    main_input = input("Enter your main path: ").strip()
-    if not main_input:
-        raise SystemExit("Main path is required.")
-    program_name = input("Enter program name: ").strip()
-    if not program_name:
-        raise SystemExit("Program name is required.")
-    args_input = input("Enter run args (optional): ").strip()
-    bin_input = input("Enter binary name (default: <program>.out): ").strip()
-    output_input = input("Enter output Makefile path (leave empty for default): ").strip()
-    return (main_input, program_name, args_input, bin_input, output_input)
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Create or update one entry in .vscode/makefileConfig.json.",
+    )
+    parser.add_argument(
+        "--main-path",
+        required=True,
+        help="Path to the main source file.",
+    )
+    parser.add_argument(
+        "--program-name",
+        required=True,
+        help="Program name. Must match Makefile.<program>.",
+    )
+    parser.add_argument(
+        "--run-args",
+        default="",
+        help="Run arguments string.",
+    )
+    parser.add_argument(
+        "--bin-name",
+        default="",
+        help="Binary name. Defaults to <program>.out.",
+    )
+    parser.add_argument(
+        "--output-path",
+        default="",
+        help="Output Makefile path. Defaults to <main-dir>/Makefile.<program>.",
+    )
+    return parser.parse_args()
 
 
 def getMainPath(main_input: str, project_root: Path) -> Path:
@@ -169,13 +189,6 @@ def detect_compilers_by_ext(relative_sources_path: list[str]) -> dict[str, str]:
     return compilers_by_ext
 
 
-def prompt_flags_by_compiler(compilers_by_ext: dict[str, str]) -> dict[str, str]:
-    flags_by_compiler: dict[str, str] = {}
-    for compiler in sorted(set(compilers_by_ext.values())):
-        flags_by_compiler[compiler] = input(f"Enter flags for {compiler} (optional): ").strip()
-    return flags_by_compiler
-
-
 def build_compile_profiles(compilers_by_ext: dict[str, str], flags_by_compiler: dict[str, str]) -> list[dict]:
     profiles = []
     for ext in sorted(compilers_by_ext.keys()):
@@ -197,10 +210,6 @@ def pick_linker_compiler(compilers_by_ext: dict[str, str]) -> str:
     if "gcc" in compilers:
         return "gcc"
     raise SystemExit("No supported compiler detected from source files.")
-
-
-def prompt_link_flags(link_compiler: str) -> str:
-    return input(f"Enter link flags for {link_compiler} (optional): ").strip()
 
 
 def read_config_entries(config_path: Path) -> list[dict]:
@@ -241,7 +250,12 @@ def write_config_entries(config_path: Path, entries: list[dict]) -> None:
 
 def generateJson() -> None:
     project_root = Path.cwd()
-    main_input, program_name, args_input, bin_input, output_input = getVariableData()
+    args = parse_args()
+    main_input = args.main_path
+    program_name = args.program_name
+    args_input = args.run_args
+    bin_input = args.bin_name
+    output_input = args.output_path
 
     main_path = getMainPath(main_input, project_root)
     sources = getSource(main_path, project_root)
@@ -249,10 +263,10 @@ def generateJson() -> None:
     relative_sources_path = getRelativePath(sources, out_path.parent)
     obj_expr = objs_from_sources(relative_sources_path)
     compilers_by_ext = detect_compilers_by_ext(relative_sources_path)
-    flags_by_compiler = prompt_flags_by_compiler(compilers_by_ext)
+    flags_by_compiler = {compiler: "" for compiler in sorted(set(compilers_by_ext.values()))}
     compile_profiles = build_compile_profiles(compilers_by_ext, flags_by_compiler)
     link_compiler = pick_linker_compiler(compilers_by_ext)
-    link_flags = prompt_link_flags(link_compiler)
+    link_flags = ""
     bin_name = bin_input if bin_input else f"{program_name}.out"
     config_path = (project_root / CONFIG_REL_PATH).resolve()
 

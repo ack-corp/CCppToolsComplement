@@ -3,13 +3,18 @@ const { runPythonModuleTask } = require("./pythonRunner");
 const PYTHON_MODULE_PREFIX = "srcs.script";
 
 async function generateJson(args) {
-  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
+  const [workspaceFolder, moduleArgs, pythonBin, pythonPathRoot] = args;
+  if (!Array.isArray(moduleArgs)) {
+    throw new Error("generateJson module arguments must be an array.");
+  }
   await runPythonModuleTask(
     workspaceFolder,
     pythonBin,
     pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.generateJson`,
-    true
+    false,
+    true,
+    moduleArgs
   );
 }
 
