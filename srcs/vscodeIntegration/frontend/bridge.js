@@ -63,6 +63,25 @@ async function deleteEntryHelper(args) {
   );
 }
 
+async function updateRunArgsHelper(args) {
+  const [workspaceFolder, entryIndex, newArgs, pythonBin, pythonPathRoot] = args;
+  if (!Number.isInteger(entryIndex) || entryIndex < 0) {
+    throw new Error("Selected program index is invalid.");
+  }
+  if (typeof newArgs !== "string") {
+    throw new Error("New run arguments must be a string.");
+  }
+  await runPythonModuleTask(
+    workspaceFolder,
+    pythonBin,
+    pythonPathRoot,
+    `${PYTHON_MODULE_PREFIX}.updateRunArgs`,
+    false,
+    true,
+    [String(entryIndex), newArgs]
+  );
+}
+
 async function deleteAllMakefiles(args) {
   const [workspaceFolder, pythonBin, pythonPathRoot] = args;
   await runPythonModuleTask(
@@ -80,5 +99,6 @@ module.exports = {
   generateMakefile,
   generateVscodeIntegration,
   deleteEntryHelper,
+  updateRunArgsHelper,
   deleteAllMakefiles
 };
