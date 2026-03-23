@@ -239,17 +239,17 @@ function buildFormHtml(title, description, fields) {
       wrapper.className = "field";
 
       const label = document.createElement("label");
-      label.htmlFor = field.name;
       label.textContent = field.label;
+      label.htmlFor = field.name;
       wrapper.appendChild(label);
 
       const input = document.createElement(field.type === "textarea" ? "textarea" : "input");
       input.id = field.name;
       input.name = field.name;
       input.value = field.presetValue;
-      input.placeholder = field.placeholder || "";
-      if (field.type !== "textarea") {
-        input.type = field.type;
+      input.placeholder = field.placeholder;
+      if (field.required) {
+        input.required = true;
       }
       wrapper.appendChild(input);
 
@@ -262,130 +262,120 @@ function buildFormHtml(title, description, fields) {
 
       const error = document.createElement("div");
       error.className = "error";
-      error.id = field.name + "__error";
+      error.dataset.errorFor = field.name;
       wrapper.appendChild(error);
 
       return wrapper;
     }
 
-    function validateField(field) {
-      const input = document.getElementById(field.name);
-      const error = document.getElementById(field.name + "__error");
-      const value = input.value;
-      error.textContent = "";
-
-      if (field.required && !value) {
-        error.textContent = "This field is required.";
-        return false;
+    function validateField(field, value) {
+      if (field.required && !value.trim()) {
+        return "This field is required.";
       }
-
       if (field.regexValidator) {
-        try {
-          const regex = new RegExp(field.regexValidator);
-          if (value && !regex.test(value)) {
-            error.textContent = "Value does not match the required format.";
-            return false;
-          }
-        } catch (_error) {
-          error.textContent = "Invalid field validator.";
-          return false;
+        const regex = new RegExp(field.regexValidator);
+        if (!regex.test(value)) {
+          return "Value does not match the expected format.";
         }
       }
-
-      return true;
+      return "";
     }
 
     function validateForm() {
-      let isValid = true;
+      let hasError = false;
       for (const field of fields) {
-        if (!validateField(field)) {
-          isValid = false;
+        const input = form.elements.namedItem(field.name);
+        const errorNode = form.querySelector('[data-error-for="' + field.name + '"]');
+        const message = validateField(field, input.value);
+        errorNode.textContent = message;
+        if (message) {
+          hasError = true;
         }
       }
-      return isValid;
+      return !hasError;
     }
 
     function collectValues() {
       const values = {};
       for (const field of fields) {
-        values[field.name] = document.getElementById(field.name).value;
+        values[field.name] = form.elements.namedItem(field.name).value;
       }
       return values;
     }
 
     for (const field of fields) {
-      const node = createField(field);
-      form.appendChild(node);
-      const input = node.querySelector("input, textarea");
-      input.addEventListener("input", () => validateField(field));
+      form.appendChild(createField(field));
     }
 
     save.addEventListener("click", () => {
       if (!validateForm()) {
         return;
       }
-      vscode.postMessage({ type: "submit", values: collectValues() });
+      vscode.postMessage({
+        type: "submit",
+        values: collectValues()
+      });
     });
 
     cancel.addEventListener("click", () => {
       vscode.postMessage({ type: "cancel" });
-    });
-
-    window.addEventListener("keydown", (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-        event.preventDefault();
-        save.click();
-      }
-      if (event.key === "Escape") {
-        event.preventDefault();
-        cancel.click();
-      }
     });
   </script>
 </body>
 </html>`;
 }
 
-function showFormBox({ panelType, title, description = "", fields }) {
-  const normalizedFields = Array.isArray(fields) ? fields.map(sanitizeField) : [];
-  return new Promise((resolve) => {
-    const panel = vscode.window.createWebviewPanel(
-      panelType,
-      title,
-      vscode.ViewColumn.Active,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: false
-      }
-    );
+async function showFormBox(options) {
+  const panelType = typeof options?.panelType === "string" && options.panelType.trim()
+    ? options.panelType.trim()
+    : "ccppToolsComplement.formBox";
+  const title = typeof options?.title === "string" && options.title.trim()
+    ? options.title.trim()
+    : "Form";
+  const description = typeof options?.description === "string" ? options.description : "";
+  const fields = Array.isArray(options?.fields)
+    ? options.fields.map((field, index) => sanitizeField(field, index))
+    : [];
 
+  const panel = vscode.window.createWebviewPanel(
+    panelType,
+    title,
+    vscode.ViewColumn.Active,
+    {
+      enableScripts: true,
+      retainContextWhenHidden: false
+    }
+  );
+
+  panel.webview.html = buildFormHtml(title, description, fields);
+
+  return new Promise((resolve) => {
     let settled = false;
-    const settle = (result) => {
+
+    const finalize = (value) => {
       if (settled) {
         return;
       }
       settled = true;
-      messageDisposable.dispose();
-      disposeDisposable.dispose();
       panel.dispose();
-      resolve(result);
+      resolve(value);
     };
 
-    panel.webview.html = buildFormHtml(title, description, normalizedFields);
-
     const messageDisposable = panel.webview.onDidReceiveMessage((message) => {
-      if (!message || typeof message !== "object") {
-        return;
-      }
-      if (message.type === "submit" && message.values && typeof message.values === "object") {
-        settle(message.values);
-      } else if (message.type === "cancel") {
-        settle(undefined);
+      if (message?.type === "submit" && message.values && typeof message.values === "object") {
+        finalize(message.values);
+      } else if (message?.type === "cancel") {
+        finalize(undefined);
       }
     });
 
     const disposeDisposable = panel.onDidDispose(() => {
-      settle(undefined);
+      finalize(undefined);
+    });
+
+    panel.onDidDispose(() => {
+      messageDisposable.dispose();
+      disposeDisposable.dispose();
     });
   });
 }

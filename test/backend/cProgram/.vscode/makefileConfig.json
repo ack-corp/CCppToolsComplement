@@ -1,6 +1,6 @@
 [
   {
-    "output_makefile": "Makefile.main02",
+    "output_makefile": "Makefile.main1",
     "parent_makefile": "Makefile",
     "compile_profiles": [
       {
@@ -11,8 +11,8 @@
     ],
     "link_compiler": "gcc",
     "link_flags": "",
-    "run_args": "",
-    "bin_name": "main02.out",
+    "run_args": "'test'",
+    "bin_name": "main1.out",
     "rel_sources": [
       "main1.c",
       "one.c",

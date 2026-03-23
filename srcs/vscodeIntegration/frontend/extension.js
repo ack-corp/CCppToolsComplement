@@ -1,6 +1,6 @@
 const vscode = require("vscode");
 const { getWorkspaceFolder, getExtentionAbsolutePath } = require("./utilsVsCode");
-const { pickProgram } = require("./graphic");
+const { pickProgram } = require("./graphic/menu/menu");
 
 const COMMAND_ID = "ccppToolsComplement.generateAndDebugFromCurrentFile";
 const BACKEND_PYTHON_ROOT = "backend";
