@@ -1,4 +1,5 @@
 const path = require("path");
+const globals = require("./globals");
 const { readJsonFile } = require("./utilsJson");
 
 const LAUNCH_REL_PATH = path.join(".vscode", "launch.json");
@@ -16,7 +17,8 @@ function getProgramNameFromEntry(entry) {
   return outputMakefile || "Unnamed program";
 }
 
-function getLaunchConfiguration(workspaceFolder, configurationName) {
+function getLaunchConfiguration(configurationName) {
+  const workspaceFolder = globals.workspaceFolder;
   const launchPath = path.join(workspaceFolder.uri.fsPath, LAUNCH_REL_PATH);
   const launchJson = readJsonFile(launchPath);
   const configurations = Array.isArray(launchJson.configurations) ? launchJson.configurations : [];

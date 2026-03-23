@@ -4,8 +4,8 @@ const { promptRunArgs } = require("./form/promptRunArgs");
 const { regenerateLaunchFiles } = require("./utils");
 
 async function updateRunArgs(args) {
-  const [workspaceFolder, entryIndex, pythonBin, pythonPathRoot] = args;
-  const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
+  const [entryIndex] = args;
+  const entries = await getMakefileConfigJson();
   const entry = entries[entryIndex];
   const currentRunArgs = entry.run_args;
   const values = await promptRunArgs(currentRunArgs);
@@ -13,8 +13,8 @@ async function updateRunArgs(args) {
     return false;
   }
   const newArgs = values.runArgs;
-  await updateRunArgsHelper([workspaceFolder, entryIndex, newArgs, pythonBin, pythonPathRoot]);
-  await regenerateLaunchFiles([workspaceFolder, pythonBin, pythonPathRoot], true);
+  await updateRunArgsHelper(entryIndex, newArgs);
+  await regenerateLaunchFiles(true);
   return true;
 }
 

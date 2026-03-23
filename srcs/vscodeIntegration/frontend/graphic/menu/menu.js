@@ -2,8 +2,8 @@ const vscode = require("vscode");
 const { createMenu } = require("./menuAsJson");
 const { launchProgram } = require("../../action/launchProgram");
 
-async function pickProgram(workspaceFolder, pythonBin, pythonPathRoot) {
-  const loadMenu = () => createMenu(workspaceFolder, pythonBin, pythonPathRoot);
+async function pickProgram() {
+  const loadMenu = () => createMenu();
   await runMenu(loadMenu);
 }
 

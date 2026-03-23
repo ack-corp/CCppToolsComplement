@@ -2,12 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build main1 (debug)",
+      "label": "build main02 (debug)",
       "type": "shell",
       "command": "make",
       "args": [
         "-f",
-        "Makefile.main1",
+        "Makefile.main02",
         "all"
       ],
       "options": {

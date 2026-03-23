@@ -1,6 +1,7 @@
 const { execFile } = require("child_process");
 const path = require("path");
 const vscode = require("vscode");
+const globals = require("./globals");
 
 function getPythonEnvironment(pythonPathRoot) {
   const existingPythonPath = process.env.PYTHONPATH;
@@ -13,19 +14,16 @@ function getPythonEnvironment(pythonPathRoot) {
 }
 
 async function runPythonModuleTask(
-  workspaceFolder,
-  pythonBin,
-  pythonPathRoot,
   moduleName,
   interactive,
   throwOnError = true,
   moduleArgs = []
 ) {
+  const workspaceFolder = globals.workspaceFolder;
+  const pythonBin = globals.pythonBin;
+  const pythonPathRoot = globals.pythonPathRoot;
   if (!interactive) {
     const exitCode = await runPythonModuleProcess(
-      workspaceFolder,
-      pythonBin,
-      pythonPathRoot,
       moduleName,
       moduleArgs
     );
@@ -62,7 +60,10 @@ async function runPythonModuleTask(
   return exitCode;
 }
 
-function runPythonModuleProcess(workspaceFolder, pythonBin, pythonPathRoot, moduleName, moduleArgs) {
+function runPythonModuleProcess(moduleName, moduleArgs) {
+  const workspaceFolder = globals.workspaceFolder;
+  const pythonBin = globals.pythonBin;
+  const pythonPathRoot = globals.pythonPathRoot;
   return new Promise((resolve, reject) => {
     execFile(
       pythonBin,

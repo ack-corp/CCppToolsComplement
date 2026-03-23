@@ -4,8 +4,8 @@ const { promptCompileFlagsForProfile } = require("./form/promptCompileFlagsForPr
 const { generateAllMakefiles } = require("./utils");
 
 async function updateCompileFlagsForProfile(args) {
-  const [workspaceFolder, entryIndex, profileIndex, pythonBin, pythonPathRoot] = args;
-  const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
+  const [entryIndex, profileIndex] = args;
+  const entries = await getMakefileConfigJson();
   const entry = entries[entryIndex];
   const profile = entry.compile_profiles[profileIndex];
   const compiler = profile.compiler;
@@ -16,15 +16,8 @@ async function updateCompileFlagsForProfile(args) {
     return false;
   }
   const newFlags = values.compileFlags;
-  await updateCompileFlagsForProfileHelper([
-    workspaceFolder,
-    entryIndex,
-    profileIndex,
-    newFlags,
-    pythonBin,
-    pythonPathRoot
-  ]);
-  await generateAllMakefiles([workspaceFolder, pythonBin, pythonPathRoot]);
+  await updateCompileFlagsForProfileHelper(entryIndex, profileIndex, newFlags);
+  await generateAllMakefiles();
   return true;
 }
 

@@ -3,58 +3,38 @@ const { runPythonModuleTask } = require("./pythonRunner");
 const PYTHON_MODULE_PREFIX = "srcs.script";
 
 async function generateJson(args) {
-  const [workspaceFolder, moduleArgs, pythonBin, pythonPathRoot] = args;
   await runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.generateJson`,
     false,
     true,
-    moduleArgs
+    args
   );
 }
 
 async function verifyJson(args, throwOnError = true) {
-  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
   return runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.verifyJson`,
     false,
     throwOnError
   );
 }
 
-async function generateMakefile(args) {
-  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
+async function generateMakefile() {
   await runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.generateMakefile`,
     false
   );
 }
 
-async function generateVscodeIntegration(args) {
-  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
+async function generateVscodeIntegration() {
   await runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.generateVscodeIntegration`,
     false
   );
 }
 
-async function deleteEntryHelper(args) {
-  const [workspaceFolder, entryIndex, pythonBin, pythonPathRoot] = args;
+async function deleteEntryHelper(entryIndex) {
   await runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.deleteEntry`,
     false,
     true,
@@ -62,12 +42,8 @@ async function deleteEntryHelper(args) {
   );
 }
 
-async function updateRunArgsHelper(args) {
-  const [workspaceFolder, entryIndex, newArgs, pythonBin, pythonPathRoot] = args;
+async function updateRunArgsHelper(entryIndex, newArgs) {
   await runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.updateRunArgs`,
     false,
     true,
@@ -75,12 +51,8 @@ async function updateRunArgsHelper(args) {
   );
 }
 
-async function updateCompileFlagsForProfileHelper(args) {
-  const [workspaceFolder, entryIndex, profileIndex, newFlags, pythonBin, pythonPathRoot] = args;
+async function updateCompileFlagsForProfileHelper(entryIndex, profileIndex, newFlags) {
   await runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.updateCompileFlagsForProfile`,
     false,
     true,
@@ -88,12 +60,8 @@ async function updateCompileFlagsForProfileHelper(args) {
   );
 }
 
-async function updateLinkFlagsHelper(args) {
-  const [workspaceFolder, entryIndex, newFlags, pythonBin, pythonPathRoot] = args;
+async function updateLinkFlagsHelper(entryIndex, newFlags) {
   await runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.updateLinkFlags`,
     false,
     true,
@@ -101,12 +69,17 @@ async function updateLinkFlagsHelper(args) {
   );
 }
 
-async function deleteAllMakefiles(args) {
-  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
+async function updateJsonSourcesHelper(entryIndex) {
+  return runPythonModuleTask(
+    `${PYTHON_MODULE_PREFIX}.updateJsonSources`,
+    false,
+    false,
+    [String(entryIndex)]
+  );
+}
+
+async function deleteAllMakefiles() {
   await runPythonModuleTask(
-    workspaceFolder,
-    pythonBin,
-    pythonPathRoot,
     `${PYTHON_MODULE_PREFIX}.deleteAllMakeFiles`,
     false
   );
@@ -121,5 +94,6 @@ module.exports = {
   updateRunArgsHelper,
   updateCompileFlagsForProfileHelper,
   updateLinkFlagsHelper,
+  updateJsonSourcesHelper,
   deleteAllMakefiles
 };

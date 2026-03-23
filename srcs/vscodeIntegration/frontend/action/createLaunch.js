@@ -1,4 +1,5 @@
 const path = require("path");
+const globals = require("../globals");
 const {
   generateJson,
   updateLinkFlagsHelper,
@@ -16,24 +17,23 @@ const {
 } = require("./utils");
 
 async function createLaunch(args) {
-  const [workspaceFolder, pythonBin, pythonPathRoot] = args;
+  const workspaceFolder = globals.workspaceFolder;
   const values = await promptGenerateJsonArgs();
   if (values === undefined) {
     return false;
   }
 
-  const moduleArgs = getGenerateJsonModuleArgs(workspaceFolder, values);
-  await generateJson([workspaceFolder, moduleArgs, pythonBin, pythonPathRoot]);
+  const moduleArgs = getGenerateJsonModuleArgs(values);
+  await generateJson(moduleArgs);
 
   const resolvedOutputPath = resolveGenerateJsonOutputPath(
-    workspaceFolder,
     values.mainPath.trim(),
     values.programName.trim()
   );
   const outputMakefile = normalizeConfigPath(
     path.relative(workspaceFolder.uri.fsPath, resolvedOutputPath)
   );
-  const entries = await getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot);
+  const entries = await getMakefileConfigJson();
   const entryIndex = findEntryIndexByOutputMakefile(entries, outputMakefile);
   if (entryIndex < 0) {
     throw new Error(`Created entry '${outputMakefile}' was not found in makefileConfig.json.`);
@@ -44,29 +44,20 @@ async function createLaunch(args) {
     return false;
   }
 
-  await updateLinkFlagsHelper([
-    workspaceFolder,
-    entryIndex,
-    flagsValues.linkFlags ?? "",
-    pythonBin,
-    pythonPathRoot
-  ]);
+  await updateLinkFlagsHelper(entryIndex, flagsValues.linkFlags ?? "");
 
   const compileProfiles = Array.isArray(entries[entryIndex].compile_profiles)
     ? entries[entryIndex].compile_profiles
     : [];
   for (const [profileIndex] of compileProfiles.entries()) {
-    await updateCompileFlagsForProfileHelper([
-      workspaceFolder,
+    await updateCompileFlagsForProfileHelper(
       entryIndex,
       profileIndex,
-      flagsValues[`compileFlags_${profileIndex}`] ?? "",
-      pythonBin,
-      pythonPathRoot
-    ]);
+      flagsValues[`compileFlags_${profileIndex}`] ?? ""
+    );
   }
 
-  await regenerateLaunchFiles([workspaceFolder, pythonBin, pythonPathRoot], true);
+  await regenerateLaunchFiles(true);
   return true;
 }
 

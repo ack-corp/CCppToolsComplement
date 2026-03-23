@@ -1,18 +1,20 @@
 const path = require("path");
 const { generateMakefile, generateVscodeIntegration } = require("../bridge");
+const globals = require("../globals");
 
 function normalizeConfigPath(filePath) {
   return filePath.split(path.sep).join("/");
 }
 
-function resolveGenerateJsonOutputPath(workspaceFolder, mainPathInput, programName) {
+function resolveGenerateJsonOutputPath(mainPathInput, programName) {
+  const workspaceFolder = globals.workspaceFolder;
   const resolvedMainPath = path.isAbsolute(mainPathInput)
     ? mainPathInput
     : path.resolve(workspaceFolder.uri.fsPath, mainPathInput);
   return path.resolve(path.dirname(resolvedMainPath), `Makefile.${programName}`);
 }
 
-function getGenerateJsonModuleArgs(workspaceFolder, values) {
+function getGenerateJsonModuleArgs(values) {
   const mainPath = values.mainPath.trim();
   const programName = values.programName.trim();
   const runArgs = values.runArgs ?? "";
@@ -36,15 +38,15 @@ function findEntryIndexByOutputMakefile(entries, outputMakefile) {
   return entries.findIndex((entry) => entry?.output_makefile === outputMakefile);
 }
 
-async function generateAllMakefiles(args) {
-  await generateMakefile(args);
+async function generateAllMakefiles() {
+  await generateMakefile();
 }
 
-async function regenerateLaunchFiles(args, regenerateMakefiles) {
+async function regenerateLaunchFiles(regenerateMakefiles) {
   if (regenerateMakefiles) {
-    await generateMakefile(args);
+    await generateMakefile();
   }
-  await generateVscodeIntegration(args);
+  await generateVscodeIntegration();
 }
 
 module.exports = {

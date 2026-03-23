@@ -11,7 +11,7 @@ async function promptGenerateJsonArgs() {
         label: "Main path",
         type: "text",
         presetValue: "",
-        regexValidator: "^(?:[A-Za-z]:[\\\\/]|[\\\\/]|\\.\\.?[\\\\/]|[^\\\\/:*?\"<>|\\r\\n]+(?:[\\\\/][^\\\\/:*?\"<>|\\r\\n]+)*)$",
+        regexValidator: "^(?:[A-Za-z]:)?[\\\\/]?[^\\\\/:*?\"<>|\\r\\n]+(?:[\\\\/][^\\\\/:*?\"<>|\\r\\n]+)*$",
         regexErrorMessage: "Use a relative or absolute path with valid path characters.",
         required: true,
         helpText: "Relative to the workspace or absolute path to the main source file."

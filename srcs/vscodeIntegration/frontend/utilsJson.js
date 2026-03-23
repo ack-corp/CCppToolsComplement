@@ -13,12 +13,12 @@ function readJsonFile(filePath) {
   }
 }
 
-async function getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot) {
+async function getMakefileConfigJson() {
   const configPath = getPathFromWorkspace(CONFIG_REL_PATH);
   if (!fs.existsSync(configPath)) {
     return [];
   }
-  const status = await verifyJson([workspaceFolder, pythonBin, pythonPathRoot], false);
+  const status = await verifyJson([], false);
   if (status !== 0) {
     throw new Error(`Config file '${configPath}' contain errors.`);
   }

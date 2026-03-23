@@ -1,16 +1,12 @@
 const vscode = require("vscode");
-const { getWorkspaceFolder, getExtentionAbsolutePath } = require("./utilsVsCode");
+const { setGlobals } = require("./globals");
 const { pickProgram } = require("./graphic/menu/menu");
 
-const COMMAND_ID = "ccppToolsComplement.generateAndDebugFromCurrentFile";
-const BACKEND_PYTHON_ROOT = "backend";
-let extensionContext = null;
-
 function activate(context) {
-  extensionContext = context;
-  const disposable = vscode.commands.registerCommand(COMMAND_ID, async () => {
+  const disposable = vscode.commands.registerCommand("ccppToolsComplement.generateAndDebugFromCurrentFile", async () => {
     try {
-      await rooting();
+      setGlobals(context);
+      await pickProgram();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       vscode.window.showErrorMessage(message);
@@ -20,13 +16,6 @@ function activate(context) {
 }
 
 function deactivate() { }
-
-async function rooting() {
-  const workspaceFolder = getWorkspaceFolder();
-  const pythonBin = vscode.workspace.getConfiguration("ccppToolsComplement").get("pythonPath", "python3");
-  const pythonPathRoot = getExtentionAbsolutePath(extensionContext, BACKEND_PYTHON_ROOT);
-  await pickProgram(workspaceFolder, pythonBin, pythonPathRoot);
-}
 
 module.exports = {
   activate,
