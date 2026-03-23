@@ -16,12 +16,6 @@ function getProgramNameFromEntry(entry) {
   return outputMakefile || "Unnamed program";
 }
 
-function getCompileProfileLabel(profile) {
-  const compiler = typeof profile.compiler === "string" ? profile.compiler : "compiler";
-  const ext = typeof profile.ext === "string" ? profile.ext : "";
-  return `${compiler} ${ext}`.trim();
-}
-
 function getLaunchConfiguration(workspaceFolder, configurationName) {
   const launchPath = path.join(workspaceFolder.uri.fsPath, LAUNCH_REL_PATH);
   const launchJson = readJsonFile(launchPath);

@@ -13,10 +13,6 @@ function readJsonFile(filePath) {
   }
 }
 
-function writeJsonFile(filePath, value) {
-  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-}
-
 async function getMakefileConfigJson(workspaceFolder, pythonBin, pythonPathRoot) {
   const configPath = getPathFromWorkspace(CONFIG_REL_PATH);
   if (!fs.existsSync(configPath)) {

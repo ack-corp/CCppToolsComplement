@@ -4,9 +4,6 @@ const PYTHON_MODULE_PREFIX = "srcs.script";
 
 async function generateJson(args) {
   const [workspaceFolder, moduleArgs, pythonBin, pythonPathRoot] = args;
-  if (!Array.isArray(moduleArgs)) {
-    throw new Error("generateJson module arguments must be an array.");
-  }
   await runPythonModuleTask(
     workspaceFolder,
     pythonBin,
@@ -54,9 +51,6 @@ async function generateVscodeIntegration(args) {
 
 async function deleteEntryHelper(args) {
   const [workspaceFolder, entryIndex, pythonBin, pythonPathRoot] = args;
-  if (!Number.isInteger(entryIndex) || entryIndex < 0) {
-    throw new Error("Selected program index is invalid.");
-  }
   await runPythonModuleTask(
     workspaceFolder,
     pythonBin,
@@ -70,12 +64,6 @@ async function deleteEntryHelper(args) {
 
 async function updateRunArgsHelper(args) {
   const [workspaceFolder, entryIndex, newArgs, pythonBin, pythonPathRoot] = args;
-  if (!Number.isInteger(entryIndex) || entryIndex < 0) {
-    throw new Error("Selected program index is invalid.");
-  }
-  if (typeof newArgs !== "string") {
-    throw new Error("New run arguments must be a string.");
-  }
   await runPythonModuleTask(
     workspaceFolder,
     pythonBin,
@@ -89,15 +77,6 @@ async function updateRunArgsHelper(args) {
 
 async function updateCompileFlagsForProfileHelper(args) {
   const [workspaceFolder, entryIndex, profileIndex, newFlags, pythonBin, pythonPathRoot] = args;
-  if (!Number.isInteger(entryIndex) || entryIndex < 0) {
-    throw new Error("Selected program index is invalid.");
-  }
-  if (!Number.isInteger(profileIndex) || profileIndex < 0) {
-    throw new Error("Selected compile profile index is invalid.");
-  }
-  if (typeof newFlags !== "string") {
-    throw new Error("New compile flags must be a string.");
-  }
   await runPythonModuleTask(
     workspaceFolder,
     pythonBin,
@@ -111,12 +90,6 @@ async function updateCompileFlagsForProfileHelper(args) {
 
 async function updateLinkFlagsHelper(args) {
   const [workspaceFolder, entryIndex, newFlags, pythonBin, pythonPathRoot] = args;
-  if (!Number.isInteger(entryIndex) || entryIndex < 0) {
-    throw new Error("Selected program index is invalid.");
-  }
-  if (typeof newFlags !== "string") {
-    throw new Error("New link flags must be a string.");
-  }
   await runPythonModuleTask(
     workspaceFolder,
     pythonBin,
