@@ -51,7 +51,15 @@ class MakefileConfigEntry:
 
     def setCompileProfiles(self, compile_profiles: list[CompileProfile]) -> None:
         self.compile_profiles = compile_profiles
-        self.setLinkCompiler(self.compile_profiles.compiler)
+        compilers = {profile.compiler for profile in self.compile_profiles if profile.compiler}
+        if "g++" in compilers:
+            self.setLinkCompiler("g++")
+        elif "gcc" in compilers:
+            self.setLinkCompiler("gcc")
+        elif self.compile_profiles:
+            self.setLinkCompiler(self.compile_profiles[0].compiler)
+        else:
+            self.setLinkCompiler("")
 
     def setLinkCompiler(self, link_compiler: str) -> None:
         self.link_compiler = link_compiler
