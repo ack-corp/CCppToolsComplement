@@ -10,13 +10,30 @@ class CompileProfile:
     compiler: str = ""
     flags: str = ""
 
-    def setExt(self, ext: str) -> None:
+    def _addValidationError(self, errors: JsonErrorsList | None, message: str) -> None:
+        if errors is None:
+            raise JsonValidationError([message])
+        errors.add(message)
+
+    def setExt(self, ext: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(ext, str) or not ext.strip():
+            self._addValidationError(errors, "Compile profile 'ext' must be a non-empty string.")
+            return
+        if not ext.startswith("."):
+            self._addValidationError(errors, "Compile profile 'ext' must start with '.'.")
+            return
         self.ext = ext
 
-    def setCompiler(self, compiler: str) -> None:
+    def setCompiler(self, compiler: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(compiler, str) or not compiler.strip():
+            self._addValidationError(errors, "Compile profile 'compiler' must be a non-empty string.")
+            return
         self.compiler = compiler
 
-    def setFlags(self, flags: str) -> None:
+    def setFlags(self, flags: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(flags, str):
+            self._addValidationError(errors, "Compile profile 'flags' must be a string.")
+            return
         self.flags = flags
 
     def toJsonObject(self) -> dict[str, str]:
@@ -34,59 +51,17 @@ class CompileProfile:
         return data
 
     @classmethod
-    def getExtFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> str:
-        ext = data.get("ext")
-        if not isinstance(ext, str) or not ext.strip():
-            errors.add("Compile profile 'ext' must be a non-empty string.")
-            return ""
-        if not ext.startswith("."):
-            errors.add("Compile profile 'ext' must start with '.'.")
-            return ""
-        return ext
-
-    @classmethod
-    def getCompilerFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> str:
-        compiler = data.get("compiler")
-        if not isinstance(compiler, str) or not compiler.strip():
-            errors.add("Compile profile 'compiler' must be a non-empty string.")
-            return ""
-        return compiler
-
-    @classmethod
-    def getFlagsFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> str:
-        flags = data.get("flags")
-        if not isinstance(flags, str):
-            errors.add("Compile profile 'flags' must be a string.")
-            return ""
-        return flags
-
-    @classmethod
-    def getErrorsFromJson(cls, data: Any) -> JsonErrorsList:
-        errors = JsonErrorsList()
-        json_object = cls._getObjectFromJson(data, errors)
-        if not errors.isEmpty():
-            return errors
-
-        cls.getExtFromJson(json_object, errors)
-        cls.getCompilerFromJson(json_object, errors)
-        cls.getFlagsFromJson(json_object, errors)
-        return errors
-
-    @classmethod
     def fromJsonObject(cls, data: Any) -> "CompileProfile":
         errors = JsonErrorsList()
         json_object = cls._getObjectFromJson(data, errors)
         if not errors.isEmpty():
             raise JsonValidationError(errors.errors)
 
-        ext = cls.getExtFromJson(json_object, errors)
-        compiler = cls.getCompilerFromJson(json_object, errors)
-        flags = cls.getFlagsFromJson(json_object, errors)
+        compile_profile = cls()
+        compile_profile.setExt(json_object.get("ext"), errors)
+        compile_profile.setCompiler(json_object.get("compiler"), errors)
+        compile_profile.setFlags(json_object.get("flags"), errors)
         if not errors.isEmpty():
             raise JsonValidationError(errors.errors)
 
-        return cls(
-            ext=ext,
-            compiler=compiler,
-            flags=flags,
-        )
+        return compile_profile

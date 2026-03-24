@@ -17,11 +17,44 @@ class MakefileConfigEntry:
     rel_sources: list[str] = field(default_factory=list)
     obj_expr: str = ""
 
-    def setOutputMakefile(self, output_makefile: str) -> None:
+    def _addValidationError(self, errors: JsonErrorsList | None, message: str) -> None:
+        if errors is None:
+            raise JsonValidationError([message])
+        errors.add(message)
+
+    def setOutputMakefile(self, output_makefile: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(output_makefile, str) or not output_makefile.strip():
+            self._addValidationError(errors, "Makefile config entry 'output_makefile' must be a non-empty string.")
+            return
         self.output_makefile = output_makefile
 
-    def setCompileProfiles(self, compile_profiles: list[CompileProfile]) -> None:
-        self.compile_profiles = compile_profiles
+    def setCompileProfiles(self, compile_profiles: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(compile_profiles, list):
+            self._addValidationError(errors, "Makefile config entry 'compile_profiles' must be a list.")
+            return
+
+        validated_profiles: list[CompileProfile] = []
+        for profile_index, profile in enumerate(compile_profiles):
+            if isinstance(profile, CompileProfile):
+                validated_profiles.append(profile)
+                continue
+            try:
+                validated_profiles.append(CompileProfile.fromJsonObject(profile))
+            except JsonValidationError as error:
+                if errors is None:
+                    raise
+                errors.extend(
+                    [
+                        f"compile_profiles[{profile_index}]: {message}"
+                        for message in error.errors
+                    ]
+                )
+
+        if errors is not None and not errors.isEmpty():
+            self.compile_profiles = validated_profiles
+            return
+
+        self.compile_profiles = validated_profiles
         compilers = {profile.compiler for profile in self.compile_profiles if profile.compiler}
         if "g++" in compilers:
             self.setLinkCompiler("g++")
@@ -32,24 +65,56 @@ class MakefileConfigEntry:
         else:
             self.setLinkCompiler("")
 
-    def setLinkCompiler(self, link_compiler: str) -> None:
+    def setLinkCompiler(self, link_compiler: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(link_compiler, str) or not link_compiler.strip():
+            self._addValidationError(errors, "Makefile config entry 'link_compiler' must be a non-empty string.")
+            return
         self.link_compiler = link_compiler
 
-    def setLinkFlags(self, link_flags: str) -> None:
+    def setLinkFlags(self, link_flags: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(link_flags, str):
+            self._addValidationError(errors, "Makefile config entry 'link_flags' must be a string.")
+            return
         self.link_flags = link_flags
 
-    def setRunArgs(self, run_args: str) -> None:
+    def setRunArgs(self, run_args: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(run_args, str):
+            self._addValidationError(errors, "Makefile config entry 'run_args' must be a string.")
+            return
         self.run_args = run_args
 
-    def setBinName(self, bin_name: str) -> None:
+    def setBinName(self, bin_name: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(bin_name, str) or not bin_name.strip():
+            self._addValidationError(errors, "Makefile config entry 'bin_name' must be a non-empty string.")
+            return
         self.bin_name = bin_name
 
-    def setRelSources(self, rel_sources: list[str]) -> None:
-        self.rel_sources = rel_sources
-        self.setCompileProfiles(self._buildCompileProfilesFromRelSources())
-        self.setObjExpr(self._buildObjExprFromRelSources())
+    def setRelSources(
+        self,
+        rel_sources: Any,
+        errors: JsonErrorsList | None = None,
+        rebuild_derived_fields: bool = True,
+    ) -> None:
+        if not isinstance(rel_sources, list):
+            self._addValidationError(errors, "Makefile config entry 'rel_sources' must be a list of strings.")
+            return
 
-    def setObjExpr(self, obj_expr: str) -> None:
+        validated_rel_sources: list[str] = []
+        for rel_source_index, rel_source in enumerate(rel_sources):
+            if not isinstance(rel_source, str) or not rel_source.strip():
+                self._addValidationError(errors, f"rel_sources[{rel_source_index}] must be a non-empty string.")
+                continue
+            validated_rel_sources.append(rel_source)
+
+        self.rel_sources = validated_rel_sources
+        if rebuild_derived_fields and (errors is None or errors.isEmpty()):
+            self.setCompileProfiles(self._buildCompileProfilesFromRelSources())
+            self.setObjExpr(self._buildObjExprFromRelSources())
+
+    def setObjExpr(self, obj_expr: Any, errors: JsonErrorsList | None = None) -> None:
+        if not isinstance(obj_expr, str) or not obj_expr.strip():
+            self._addValidationError(errors, "Makefile config entry 'obj_expr' must be a non-empty string.")
+            return
         self.obj_expr = obj_expr
 
     def _getFlagsByCompiler(self) -> dict[str, str]:
@@ -121,134 +186,22 @@ class MakefileConfigEntry:
         return data
 
     @classmethod
-    def _getRequiredStringFieldFromJson(
-        cls,
-        data: dict[str, Any],
-        key: str,
-        errors: JsonErrorsList,
-    ) -> str:
-        value = data.get(key)
-        if not isinstance(value, str) or not value.strip():
-            errors.add(f"Makefile config entry '{key}' must be a non-empty string.")
-            return ""
-        return value
-
-    @classmethod
-    def _getStringFieldFromJson(
-        cls,
-        data: dict[str, Any],
-        key: str,
-        errors: JsonErrorsList,
-    ) -> str:
-        value = data.get(key)
-        if not isinstance(value, str):
-            errors.add(f"Makefile config entry '{key}' must be a string.")
-            return ""
-        return value
-
-    @classmethod
-    def getOutputMakefileFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> str:
-        return cls._getRequiredStringFieldFromJson(data, "output_makefile", errors)
-
-    @classmethod
-    def getCompileProfilesFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> list[CompileProfile]:
-        compile_profiles_data = data.get("compile_profiles")
-        if not isinstance(compile_profiles_data, list):
-            errors.add("Makefile config entry 'compile_profiles' must be a list.")
-            return []
-
-        compile_profiles: list[CompileProfile] = []
-        for profile_index, profile_data in enumerate(compile_profiles_data):
-            try:
-                compile_profiles.append(CompileProfile.fromJsonObject(profile_data))
-            except JsonValidationError as error:
-                errors.extend(
-                    [
-                        f"compile_profiles[{profile_index}]: {message}"
-                        for message in error.errors
-                    ]
-                )
-        return compile_profiles
-
-    @classmethod
-    def getLinkCompilerFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> str:
-        return cls._getRequiredStringFieldFromJson(data, "link_compiler", errors)
-
-    @classmethod
-    def getLinkFlagsFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> str:
-        return cls._getStringFieldFromJson(data, "link_flags", errors)
-
-    @classmethod
-    def getRunArgsFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> str:
-        return cls._getStringFieldFromJson(data, "run_args", errors)
-
-    @classmethod
-    def getBinNameFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> str:
-        return cls._getRequiredStringFieldFromJson(data, "bin_name", errors)
-
-    @classmethod
-    def getRelSourcesFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> list[str]:
-        rel_sources_data = data.get("rel_sources")
-        if not isinstance(rel_sources_data, list):
-            errors.add("Makefile config entry 'rel_sources' must be a list of strings.")
-            return []
-
-        rel_sources: list[str] = []
-        for rel_source_index, rel_source in enumerate(rel_sources_data):
-            if not isinstance(rel_source, str) or not rel_source.strip():
-                errors.add(
-                    f"rel_sources[{rel_source_index}] must be a non-empty string."
-                )
-                continue
-            rel_sources.append(rel_source)
-        return rel_sources
-
-    @classmethod
-    def getObjExprFromJson(cls, data: dict[str, Any], errors: JsonErrorsList) -> str:
-        return cls._getRequiredStringFieldFromJson(data, "obj_expr", errors)
-
-    @classmethod
-    def getErrorsFromJson(cls, data: Any) -> JsonErrorsList:
-        errors = JsonErrorsList()
-        json_object = cls._getObjectFromJson(data, errors)
-        if not errors.isEmpty():
-            return errors
-
-        cls.getOutputMakefileFromJson(json_object, errors)
-        cls.getCompileProfilesFromJson(json_object, errors)
-        cls.getLinkCompilerFromJson(json_object, errors)
-        cls.getLinkFlagsFromJson(json_object, errors)
-        cls.getRunArgsFromJson(json_object, errors)
-        cls.getBinNameFromJson(json_object, errors)
-        cls.getRelSourcesFromJson(json_object, errors)
-        cls.getObjExprFromJson(json_object, errors)
-        return errors
-
-    @classmethod
     def fromJsonObject(cls, data: Any) -> "MakefileConfigEntry":
         errors = JsonErrorsList()
         json_object = cls._getObjectFromJson(data, errors)
         if not errors.isEmpty():
             raise JsonValidationError(errors.errors)
 
-        output_makefile = cls.getOutputMakefileFromJson(json_object, errors)
-        compile_profiles = cls.getCompileProfilesFromJson(json_object, errors)
-        link_compiler = cls.getLinkCompilerFromJson(json_object, errors)
-        link_flags = cls.getLinkFlagsFromJson(json_object, errors)
-        run_args = cls.getRunArgsFromJson(json_object, errors)
-        bin_name = cls.getBinNameFromJson(json_object, errors)
-        rel_sources = cls.getRelSourcesFromJson(json_object, errors)
-        obj_expr = cls.getObjExprFromJson(json_object, errors)
+        entry = cls()
+        entry.setOutputMakefile(json_object.get("output_makefile"), errors)
+        entry.setCompileProfiles(json_object.get("compile_profiles"), errors)
+        entry.setLinkCompiler(json_object.get("link_compiler"), errors)
+        entry.setLinkFlags(json_object.get("link_flags"), errors)
+        entry.setRunArgs(json_object.get("run_args"), errors)
+        entry.setBinName(json_object.get("bin_name"), errors)
+        entry.setRelSources(json_object.get("rel_sources"), errors, rebuild_derived_fields=False)
+        entry.setObjExpr(json_object.get("obj_expr"), errors)
         if not errors.isEmpty():
             raise JsonValidationError(errors.errors)
 
-        return cls(
-            output_makefile=output_makefile,
-            compile_profiles=compile_profiles,
-            link_compiler=link_compiler,
-            link_flags=link_flags,
-            run_args=run_args,
-            bin_name=bin_name,
-            rel_sources=rel_sources,
-            obj_expr=obj_expr,
-        )
+        return entry
