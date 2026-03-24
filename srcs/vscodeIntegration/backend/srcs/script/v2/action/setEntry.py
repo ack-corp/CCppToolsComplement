@@ -4,13 +4,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from srcs.script.v2.getRelSources import getRelSources
-from srcs.script.v2.jsonModel import (
-    MakefileConfigEntry,
+from srcs.script.v2.action.helper.getRelSources import getRelSources
+from srcs.script.v2.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from srcs.script.v2.MakefileConfigEntry.utils import (
     makefileConfigEntriesToJson,
     parseMakefileConfigEntriesJson,
 )
-from srcs.script.v2.utils import getProgramNameFromMakefileName
+from srcs.script.v2.action.helper.utils import getProgramNameFromMakefileName
 
 CONFIG_REL_PATH = Path(".vscode/makefileConfig.json")
 

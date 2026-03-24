@@ -3,10 +3,10 @@ import argparse
 import os
 from pathlib import Path
 
-from srcs.script.v2.getRelSources import getRelSources
-from srcs.script.v2.getRelSources import getMainPath, getOutputPath
-from srcs.script.v2.jsonModel import (
-    MakefileConfigEntry,
+from srcs.script.v2.action.helper.getRelSources import getRelSources
+from srcs.script.v2.action.helper.getRelSources import getMainPath, getOutputPath
+from srcs.script.v2.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from srcs.script.v2.MakefileConfigEntry.utils import (
     makefileConfigEntriesToJson,
     parseMakefileConfigEntriesJson,
 )

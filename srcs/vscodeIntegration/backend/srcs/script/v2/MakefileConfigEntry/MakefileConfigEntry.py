@@ -1,38 +1,8 @@
 from dataclasses import dataclass, field
-import json
 from pathlib import Path
 from typing import Any
 
-
-@dataclass
-class CompileProfile:
-    ext: str = ""
-    compiler: str = ""
-    flags: str = ""
-
-    def setExt(self, ext: str) -> None:
-        self.ext = ext
-
-    def setCompiler(self, compiler: str) -> None:
-        self.compiler = compiler
-
-    def setFlags(self, flags: str) -> None:
-        self.flags = flags
-
-    def toJsonObject(self) -> dict[str, str]:
-        return {
-            "ext": self.ext,
-            "compiler": self.compiler,
-            "flags": self.flags,
-        }
-
-    @classmethod
-    def fromJsonObject(cls, data: Any) -> "CompileProfile":
-        return cls(
-            ext=str(data.get("ext", "")),
-            compiler=str(data.get("compiler", "")),
-            flags=str(data.get("flags", "")),
-        )
+from srcs.script.v2.MakefileConfigEntry.CompileProfile import CompileProfile
 
 
 @dataclass
@@ -159,29 +129,3 @@ class MakefileConfigEntry:
             rel_sources=[str(rel_source) for rel_source in rel_sources_data],
             obj_expr=str(data.get("obj_expr", "")),
         )
-
-
-def makeEmptyCompileProfile() -> CompileProfile:
-    return CompileProfile()
-
-
-def makeEmptyMakefileConfigEntry() -> MakefileConfigEntry:
-    return MakefileConfigEntry()
-
-
-def parseMakefileConfigEntries(data: Any) -> list[MakefileConfigEntry]:
-    if not isinstance(data, list):
-        raise ValueError("makefile config must be a JSON array")
-    return [MakefileConfigEntry.fromJsonObject(entry_data) for entry_data in data]
-
-
-def parseMakefileConfigEntriesJson(json_text: str) -> list[MakefileConfigEntry]:
-    return parseMakefileConfigEntries(json.loads(json_text))
-
-
-def makefileConfigEntriesToJsonObject(entries: list[MakefileConfigEntry]) -> list[dict[str, Any]]:
-    return [entry.toJsonObject() for entry in entries]
-
-
-def makefileConfigEntriesToJson(entries: list[MakefileConfigEntry]) -> str:
-    return json.dumps(makefileConfigEntriesToJsonObject(entries), indent=2)

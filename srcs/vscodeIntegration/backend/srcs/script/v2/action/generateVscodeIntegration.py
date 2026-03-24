@@ -5,7 +5,7 @@ import shlex
 from pathlib import Path
 from typing import Any
 
-from srcs.script.v2.utils import getProgramNameFromMakefileName, read_entries
+from srcs.script.v2.action.helper.utils import getProgramNameFromMakefileName, read_entries
 from srcs.script.v2.verifyJson import verifyjson
 
 JsonObject = dict[str, Any]

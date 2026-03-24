@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
-from srcs.script.v2.utils import getCompiler, getProgramNameFromMakefileName
+from srcs.script.v2.action.helper.utils import getCompiler, getProgramNameFromMakefileName
 
 JsonObject = dict[str, Any]
 FieldErrorsByKey = dict[str, list[str]]

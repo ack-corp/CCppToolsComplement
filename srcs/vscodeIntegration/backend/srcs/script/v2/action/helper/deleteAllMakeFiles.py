@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
-from srcs.script.v2.utils import getProgramNameFromMakefileName, read_entries
+from srcs.script.v2.action.helper.utils import getProgramNameFromMakefileName, read_entries
 
 CONFIG_REL_PATH = Path(".vscode/makefileConfig.json")
 
