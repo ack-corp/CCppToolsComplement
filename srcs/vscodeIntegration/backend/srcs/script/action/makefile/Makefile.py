@@ -4,9 +4,12 @@ from srcs.script.MakefileConfigEntry.CompileProfile import CompileProfile
 from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
 from srcs.script.exception.exceptionJsonErrorsList import JsonErrorsList, JsonValidationError
 
+FORCED_DEBUG_FLAGS = ("-g3", "-O0")
+
 
 class Makefile:
     def __init__(self, makefile_config_entry: MakefileConfigEntry) -> None:
+        self._output_makefile = makefile_config_entry.output_makefile
         self._compile_profiles: list[CompileProfile] = makefile_config_entry.compile_profiles
         self._link_compiler = makefile_config_entry.link_compiler
         self._link_flags = makefile_config_entry.link_flags
@@ -17,6 +20,10 @@ class Makefile:
         self._deps = "$(OBJS:.o=.d)"
         self._pattern_rules: list[str] = []
         self.setPatternRules()
+
+    @property
+    def output_makefile(self) -> str:
+        return self._output_makefile
 
     @property
     def compile_profiles(self) -> list[CompileProfile]:
@@ -54,9 +61,50 @@ class Makefile:
     def pattern_rules(self) -> list[str]:
         return self._pattern_rules
 
+    def _forceFlags(self, flags: str, required_flags: tuple[str, ...] = FORCED_DEBUG_FLAGS) -> str:
+        tokens = flags.split()
+        for required_flag in required_flags:
+            if required_flag not in tokens:
+                tokens.append(required_flag)
+        return " ".join(tokens)
+
     def setPatternRules(self) -> None:
         self._pattern_rules = [
             f"%.o: %{compile_profile.ext}\n"
-            f"\t{compile_profile.compiler} {compile_profile.flags} -c $< -o $@\n"
+            f"\t{compile_profile.compiler} {self._forceFlags(compile_profile.flags)} -c $< -o $@\n"
             for compile_profile in self.compile_profiles
         ]
+
+    def generate(self) -> str:
+        lines = [
+            f"LINK_COMPILER = {self.link_compiler}",
+            f"LINK_FLAGS = {self._forceFlags(self.link_flags)}",
+            f"ARGS = {self.args}",
+            f"BIN = {self.bin}",
+            f"SRCS = {' '.join(self.srcs)}",
+            f"OBJS = {self.objs}",
+            f"DEPS = {self.deps}",
+            "",
+            "all: $(BIN)",
+            "",
+            "$(BIN): $(OBJS)",
+            "\t$(LINK_COMPILER) $(LINK_FLAGS) $^ -o $@",
+            "",
+            *self.pattern_rules,
+            "run: $(BIN)",
+            "\t./$(BIN) $(ARGS)",
+            "",
+            "clean:",
+            "\trm -f $(OBJS) $(DEPS)",
+            "",
+            "fclean: clean",
+            "\trm -f $(BIN)",
+            "",
+            "re: fclean all",
+            "",
+            ".PHONY: all run clean fclean re",
+            "",
+            "-include $(DEPS)",
+            "",
+        ]
+        return "\n".join(lines)

@@ -21,7 +21,7 @@ async function verifyJson(args, throwOnError = true) {
 
 async function generateMakefile() {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.helper.generateMakefile`,
+    `${PYTHON_MODULE_PREFIX}.action.makefile.generateMakefile`,
     false
   );
 }
