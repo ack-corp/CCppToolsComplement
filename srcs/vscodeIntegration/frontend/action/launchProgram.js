@@ -1,7 +1,7 @@
 const vscode = require("vscode");
 const globals = require("../globals");
 const {
-  setJsonSourcesHelper,
+  refreshEntrySourcesHelper,
   setLinkFlagsHelper,
   setCompileFlagsForProfileHelper
 } = require("../bridge");
@@ -13,11 +13,18 @@ const {
 const { promptFlagsForEntry } = require("./form/promptFlagsForEntry");
 const { regenerateLaunchFiles } = require("./utils");
 
-async function trySetJsonSources(entryIndex) {
-  const status = await setJsonSourcesHelper(entryIndex);
+async function launchProgram(args) {
+  const [entryIndex] = args;
+  const entriesBefore = await getMakefileConfigJson();
+  const previousEntry = entriesBefore[entryIndex];
+  const refreshStatus = await refreshEntrySourcesHelper(
+    entryIndex,
+    JSON.stringify(previousEntry.rel_sources ?? [])
+  );
   const entries = await getMakefileConfigJson();
   const entry = entries[entryIndex];
-  if (status === 1) {
+
+  if (refreshStatus === 1) {
     const flagsValues = await promptFlagsForEntry(entry);
     if (flagsValues === undefined) {
       return false;
@@ -31,15 +38,6 @@ async function trySetJsonSources(entryIndex) {
         flagsValues[`compileFlags_${profileIndex}`] ?? ""
       );
     }
-  }
-  return entry;
-}
-
-async function launchProgram(args) {
-  const [entryIndex] = args;
-  const entry = await trySetJsonSources(entryIndex);
-  if (entry === false) {
-    return false;
   }
   await regenerateLaunchFiles(true);
   const launchConfig = getLaunchConfiguration(getProgramNameFromEntry(entry));

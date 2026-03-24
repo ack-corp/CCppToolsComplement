@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from srcs.script.v2.MakefileConfigEntry.CompileProfile import CompileProfile
+from srcs.script.MakefileConfigEntry.CompileProfile import CompileProfile
 
 
 @dataclass

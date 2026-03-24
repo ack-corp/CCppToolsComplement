@@ -1,8 +1,8 @@
 import json
 from typing import Any
 
-from srcs.script.v2.MakefileConfigEntry.CompileProfile import CompileProfile
-from srcs.script.v2.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from srcs.script.MakefileConfigEntry.CompileProfile import CompileProfile
+from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
 
 
 def makeEmptyCompileProfile() -> CompileProfile:

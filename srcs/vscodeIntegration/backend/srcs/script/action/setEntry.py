@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
-from srcs.script.v2.action.helper.getRelSources import getRelSources
-from srcs.script.v2.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-from srcs.script.v2.MakefileConfigEntry.utils import (
+from srcs.script.action.helper.getRelSources import getRelSources
+from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from srcs.script.MakefileConfigEntry.utils import (
     makefileConfigEntriesToJson,
     parseMakefileConfigEntriesJson,
 )
-from srcs.script.v2.action.helper.utils import getProgramNameFromMakefileName
+from srcs.script.action.helper.utils import getProgramNameFromMakefileName
 
 CONFIG_REL_PATH = Path(".vscode/makefileConfig.json")
 
@@ -92,9 +93,13 @@ def setCompileProfileFlags(entry: MakefileConfigEntry, profile_index: int, flags
     entry.compile_profiles[profile_index].setFlags(flags)
 
 
-def updateEntry(entry: MakefileConfigEntry, args: argparse.Namespace) -> None:
+def updateEntry(entry: MakefileConfigEntry, args: argparse.Namespace) -> int:
+    refresh_status = 0
     if args.rel_sources_json is not None:
+        previous_compilers = {profile.compiler for profile in entry.compile_profiles if profile.compiler}
         entry.setRelSources(rebuildRelSources(entry, parseRelSourcesJson(args.rel_sources_json)))
+        next_compilers = {profile.compiler for profile in entry.compile_profiles if profile.compiler}
+        refresh_status = 1 if next_compilers - previous_compilers else 0
     if args.link_flag_compile_profiles is not None:
         if args.compile_profile_index is None:
             raise ValueError("--compile-profile-index is required with --link-flag-compile-profiles")
@@ -103,6 +108,7 @@ def updateEntry(entry: MakefileConfigEntry, args: argparse.Namespace) -> None:
         entry.setLinkFlags(args.link_flags)
     if args.run_args is not None:
         entry.setRunArgs(args.run_args)
+    return refresh_status
 
 
 def main() -> None:
@@ -111,7 +117,7 @@ def main() -> None:
     entries = readEntries(config_path)
     entry = getEntryByIndex(entries, args.entry_index)
     previous_entry: dict[str, Any] = entry.toJsonObject()
-    updateEntry(entry, args)
+    refresh_status = updateEntry(entry, args)
     writeEntries(config_path, entries)
 
     print(f"Updated {config_path}")
@@ -119,6 +125,7 @@ def main() -> None:
         f"Updated entry {args.entry_index}: "
         f"{json.dumps(previous_entry, sort_keys=True)} -> {json.dumps(entry.toJsonObject(), sort_keys=True)}"
     )
+    sys.exit(refresh_status)
 
 
 if __name__ == "__main__":

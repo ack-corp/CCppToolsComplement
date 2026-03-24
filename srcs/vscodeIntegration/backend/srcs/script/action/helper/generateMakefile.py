@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
-from srcs.script.v2.action.helper.utils import (
+from srcs.script.action.helper.utils import (
     compiler_var_key,
     getProgramNameFromMakefileName,
     read_entries,
 )
-from srcs.script.v2.verifyJson import verifyjson
+from srcs.script.verifyJson import verifyjson
 
 FORCED_DEBUG_FLAGS = ("-g3", "-O0")
 

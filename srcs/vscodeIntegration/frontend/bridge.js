@@ -4,7 +4,7 @@ const PYTHON_MODULE_PREFIX = "srcs.script";
 
 async function generateJson(args) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.v2.action.createEntry`,
+    `${PYTHON_MODULE_PREFIX}.action.createEntry`,
     false,
     true,
     args
@@ -21,21 +21,21 @@ async function verifyJson(args, throwOnError = true) {
 
 async function generateMakefile() {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.generateMakefile`,
+    `${PYTHON_MODULE_PREFIX}.action.helper.generateMakefile`,
     false
   );
 }
 
 async function generateVscodeIntegration() {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.v2.action.generateVscodeIntegration`,
+    `${PYTHON_MODULE_PREFIX}.action.generateVscodeIntegration`,
     false
   );
 }
 
 async function deleteEntryHelper(entryIndex) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.v2.action.deleteEntry`,
+    `${PYTHON_MODULE_PREFIX}.action.deleteEntry`,
     false,
     true,
     [String(entryIndex)]
@@ -44,43 +44,49 @@ async function deleteEntryHelper(entryIndex) {
 
 async function setRunArgsHelper(entryIndex, newArgs) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.setRunArgs`,
+    `${PYTHON_MODULE_PREFIX}.action.setEntry`,
     false,
     true,
-    [String(entryIndex), newArgs]
+    [String(entryIndex), "--run-args", newArgs]
   );
 }
 
 async function setCompileFlagsForProfileHelper(entryIndex, profileIndex, newFlags) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.setCompileFlagsForProfile`,
+    `${PYTHON_MODULE_PREFIX}.action.setEntry`,
     false,
     true,
-    [String(entryIndex), String(profileIndex), newFlags]
+    [
+      String(entryIndex),
+      "--compile-profile-index",
+      String(profileIndex),
+      "--link-flag-compile-profiles",
+      newFlags
+    ]
   );
 }
 
 async function setLinkFlagsHelper(entryIndex, newFlags) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.setLinkFlags`,
+    `${PYTHON_MODULE_PREFIX}.action.setEntry`,
     false,
     true,
-    [String(entryIndex), newFlags]
+    [String(entryIndex), "--link-flags", newFlags]
   );
 }
 
-async function setJsonSourcesHelper(entryIndex) {
+async function refreshEntrySourcesHelper(entryIndex, relSourcesJson) {
   return runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.setJsonSources`,
+    `${PYTHON_MODULE_PREFIX}.action.setEntry`,
     false,
     false,
-    [String(entryIndex)]
+    [String(entryIndex), "--rel-sources-json", relSourcesJson]
   );
 }
 
 async function deleteAllMakefiles() {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.v2.deleteAllMakeFiles`,
+    `${PYTHON_MODULE_PREFIX}.action.helper.deleteAllMakeFiles`,
     false
   );
 }
@@ -94,6 +100,6 @@ module.exports = {
   setRunArgsHelper,
   setCompileFlagsForProfileHelper,
   setLinkFlagsHelper,
-  setJsonSourcesHelper,
+  refreshEntrySourcesHelper,
   deleteAllMakefiles
 };

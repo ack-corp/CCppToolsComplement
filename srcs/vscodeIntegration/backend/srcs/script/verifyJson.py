@@ -2,7 +2,8 @@
 import json
 from pathlib import Path
 from typing import Any, Callable
-from srcs.script.utils import getCompiler, getProgramNameFromMakefileName
+
+from srcs.script.action.helper.utils import getCompiler, getProgramNameFromMakefileName
 
 JsonObject = dict[str, Any]
 FieldErrorsByKey = dict[str, list[str]]
@@ -49,7 +50,7 @@ def getExtensionFromCompileProfiles(entry_index: int, compile_profiles: Any) -> 
     extensions: set[str] = set()
     errors = []
     if not isinstance(compile_profiles, list) or not compile_profiles:
-            return extensions, [f"[entry {entry_index}] 'compile_profiles' must be a non-empty list."]
+        return extensions, [f"[entry {entry_index}] 'compile_profiles' must be a non-empty list."]
     for profile_index, profile in enumerate(compile_profiles):
         if not isinstance(profile, dict):
             errors.append(f"[entry {entry_index}] compile profile #{profile_index} must be an object.")
@@ -76,9 +77,10 @@ def getCompileProfileCompilerErrors(entry_index: int, compile_profiles: Any) -> 
             compiler = profile.get("compiler")
             if not isNonEmptyString(compiler):
                 errors.append(f"[entry {entry_index}] compile profile #{profile_index} has invalid 'compiler'.")
-            else:
-                if isNonEmptyString(ext) and str(ext).startswith("."):
-                    errors.extend(getCompilerMatchErrors(entry_index, str(ext), str(compiler), f"compile profile #{profile_index}",))
+            elif isNonEmptyString(ext) and str(ext).startswith("."):
+                errors.extend(
+                    getCompilerMatchErrors(entry_index, str(ext), str(compiler), f"compile profile #{profile_index}")
+                )
     return errors
 
 
@@ -89,10 +91,23 @@ def getCompileProfileFlagErrors(entry_index: int, compile_profiles: Any) -> list
     for profile_index, profile in enumerate(compile_profiles):
         if not isinstance(profile, dict):
             errors.append(f"[entry {entry_index}] compile profile #{profile_index} must be an object.")
-        else:
-            if not isinstance(profile.get("flags"), str):
-                errors.append(f"[entry {entry_index}] compile profile #{profile_index} has invalid 'flags'.")
+        elif not isinstance(profile.get("flags"), str):
+            errors.append(f"[entry {entry_index}] compile profile #{profile_index} has invalid 'flags'.")
     return errors
+
+
+def getRelSources(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    rel_sources: list[str] = []
+    for source in value:
+        if not isNonEmptyString(source):
+            continue
+        source_str = str(source)
+        if Path(source_str).is_absolute():
+            continue
+        rel_sources.append(source_str)
+    return rel_sources
 
 
 def getCompileProfilesErrors(
@@ -109,20 +124,6 @@ def getCompileProfilesErrors(
     if not field_errors_by_key.get("rel_sources"):
         errors.extend(getMissingExtensionErrors(entry_index, getRelSources(entry.get("rel_sources")), extensions))
     return errors
-
-
-def getRelSources(value: Any) -> list[str]:
-    if not isinstance(value, list):
-        return []
-    rel_sources: list[str] = []
-    for source in value:
-        if not isNonEmptyString(source):
-            continue
-        source_str = str(source)
-        if Path(source_str).is_absolute():
-            continue
-        rel_sources.append(source_str)
-    return rel_sources
 
 
 def getMakefileNameErrors(entry_index: int, entry: JsonObject, value: Any, field_errors_by_key: FieldErrorsByKey) -> list[str]:
@@ -146,7 +147,7 @@ def getLinkCompilerErrors(entry_index: int, entry: JsonObject, value: Any, field
     main_extension = Path(rel_sources[0]).suffix
     if not main_extension:
         return [f"[entry {entry_index}] Cannot validate 'link_compiler': main source '{rel_sources[0]}' has no extension."]
-    mismatch_errors = getCompilerMatchErrors(entry_index, main_extension, str(value), "link_compiler",)
+    mismatch_errors = getCompilerMatchErrors(entry_index, main_extension, str(value), "link_compiler")
     if mismatch_errors:
         if "unsupported extension" in mismatch_errors[0]:
             return [f"[entry {entry_index}] Cannot validate 'link_compiler': unsupported main extension '{main_extension}'."]
@@ -183,9 +184,18 @@ def getRelSourceErrors(entry_index: int, entry: JsonObject, value: Any, field_er
     for source_index, source in enumerate(value):
         if not isNonEmptyString(source):
             errors.append(f"[entry {entry_index}] rel_sources[{source_index}] must be a non-empty string.")
-        else:
-            if Path(source).is_absolute():
-                errors.append(f"[entry {entry_index}] rel_sources[{source_index}] must be relative.")
+        elif Path(source).is_absolute():
+            errors.append(f"[entry {entry_index}] rel_sources[{source_index}] must be relative.")
+    return errors
+
+
+def getSrcsObjsMatch(entry_index: int, rel_sources: list[str], obj_tokens: list[str]) -> list[str]:
+    errors: list[str] = []
+    if rel_sources and obj_tokens and len(rel_sources) != len(obj_tokens):
+        errors.append(
+            f"[entry {entry_index}] rel_sources count ({len(rel_sources)}) "
+            f"does not match obj_expr token count ({len(obj_tokens)})."
+        )
     return errors
 
 
@@ -216,7 +226,7 @@ FIELD_VALIDATORS: list[tuple[str, FieldValidator]] = [
 ]
 
 
-def getFieldErrors(entry_index: int, entry: JsonObject):
+def getFieldErrors(entry_index: int, entry: JsonObject) -> list[str]:
     errors: list[str] = []
     field_errors_by_key: FieldErrorsByKey = {}
     known_keys = {field_key for field_key, _ in FIELD_VALIDATORS}
@@ -233,23 +243,7 @@ def getFieldErrors(entry_index: int, entry: JsonObject):
     return errors
 
 
-def getSrcsObjsMatch(entry_index: int, rel_sources, obj_tokens):
-    errors: list[str] = []
-    if (
-        isinstance(rel_sources, list)
-        and isinstance(obj_tokens, list)
-        and rel_sources
-        and obj_tokens
-        and len(rel_sources) != len(obj_tokens)
-    ):
-        errors.append(
-            f"[entry {entry_index}] rel_sources count ({len(rel_sources)}) "
-            f"does not match obj_expr token count ({len(obj_tokens)})."
-        )
-    return errors
-
-
-def getMissingFieldErrors(entry_index: int, entry: JsonObject):
+def getMissingFieldErrors(entry_index: int, entry: JsonObject) -> list[str]:
     errors: list[str] = []
     for missing_field in sorted(REQUIRED_ENTRY_FIELDS - set(entry.keys())):
         errors.append(f"[entry {entry_index}] Missing required field '{missing_field}'.")
@@ -291,7 +285,7 @@ def getEntries(config_path: Path) -> tuple[list[JsonObject], list[str]]:
     return entries, []
 
 
-def printSummary(errors: list[str], config_path: Path, entries: list[JsonObject]):
+def printSummary(errors: list[str], config_path: Path, entries: list[JsonObject]) -> None:
     if errors:
         print(f"Verification failed for {config_path}:")
         for err in errors:
