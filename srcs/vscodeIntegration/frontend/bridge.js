@@ -4,7 +4,7 @@ const PYTHON_MODULE_PREFIX = "srcs.script";
 
 async function generateJson(args) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.generateJson`,
+    `${PYTHON_MODULE_PREFIX}.v2.createEntry`,
     false,
     true,
     args
@@ -35,7 +35,7 @@ async function generateVscodeIntegration() {
 
 async function deleteEntryHelper(entryIndex) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.deleteEntry`,
+    `${PYTHON_MODULE_PREFIX}.v2.deleteEntry`,
     false,
     true,
     [String(entryIndex)]

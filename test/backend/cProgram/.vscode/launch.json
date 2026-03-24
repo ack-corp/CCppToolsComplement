@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "main02",
+      "name": "main2",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/main02.out",
+      "program": "${workspaceFolder}/main2.out",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
@@ -13,7 +13,7 @@
       "externalConsole": false,
       "MIMode": "gdb",
       "miDebuggerPath": "/usr/bin/gdb",
-      "preLaunchTask": "build main02 (debug)",
+      "preLaunchTask": "build main2 (debug)",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",

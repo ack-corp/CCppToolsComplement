@@ -1,15 +1,9 @@
-Weird code :
-------
-  return {
-    shouldExitMenu: node.runner === launchProgram,
-    refreshMenu: node.runner !== launchProgram
-  };
-------
+V2 Patched:
+  createEntry.py OK
+  deleteEntry.py OK
 
 update include before every launch
 carefull on generateVscodeIntegration.py to not erase field that are not managed by our extension
-
-
 
 ---------------
 
@@ -28,31 +22,10 @@ If you want, I can also add a second launch config that opens /home/achaisne/Doc
 
 ---------------
 
-Best architecture:
-
-JS/VS Code side: collect data with showInputBox, showQuickPick, or a WebviewPanel if the form gets bigger.
-Python side: keep only validation, source discovery, compiler detection, and JSON writing.
-Interface between them: pass structured data to Python as CLI args or one JSON payload.
-So the clean replacement is not “move UI to Python”, but:
-
-remove input() from Python,
-make Python a non-interactive engine,
-build the windows in the VS Code extension.
-If you want, I can refactor createLaunch() so the whole “new launch” flow becomes graphical and the Python script becomes pure backend logic.
-
----------------
-
-remove def prompt_link_flags(link_compiler: str) -> str: and 
-def prompt_flags_by_compiler(compilers_by_ext: dict[str, str]) -> dict[str, str]:
-create a first windows (WebviewPanel) to replace def getVariableData() -> tuple[str, str, str, str, str]:
-validate with a next button
-create a second windows to set the compilers flags
-validate with a create button
-
----------------
-
-feature:
-see config
-edit config
-set args / set flags (short)
-delete config + warning it will delete the corresponding makefile
+Weird code :
+------
+  return {
+    shouldExitMenu: node.runner === launchProgram,
+    refreshMenu: node.runner !== launchProgram
+  };
+------
