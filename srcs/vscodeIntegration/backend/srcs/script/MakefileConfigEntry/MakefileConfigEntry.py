@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -6,16 +5,60 @@ from srcs.script.MakefileConfigEntry.CompileProfile import CompileProfile
 from srcs.script.exception.exceptionJsonErrorsList import JsonErrorsList, JsonValidationError
 
 
-@dataclass
 class MakefileConfigEntry:
-    output_makefile: str = ""
-    compile_profiles: list[CompileProfile] = field(default_factory=list)
-    link_compiler: str = ""
-    link_flags: str = ""
-    run_args: str = ""
-    bin_name: str = ""
-    rel_sources: list[str] = field(default_factory=list)
-    obj_expr: str = ""
+    def __init__(self) -> None:
+        self._output_makefile = ""
+        self._compile_profiles: list[CompileProfile] = []
+        self._link_compiler = ""
+        self._link_flags = ""
+        self._run_args = ""
+        self._bin_name = ""
+        self._rel_sources: list[str] = []
+        self._obj_expr = ""
+
+    @property
+    def output_makefile(self) -> str:
+        return self._output_makefile
+
+    @property
+    def compile_profiles(self) -> list[CompileProfile]:
+        return self._compile_profiles
+
+    @property
+    def link_compiler(self) -> str:
+        return self._link_compiler
+
+    @property
+    def link_flags(self) -> str:
+        return self._link_flags
+
+    @property
+    def run_args(self) -> str:
+        return self._run_args
+
+    @property
+    def bin_name(self) -> str:
+        return self._bin_name
+
+    @property
+    def rel_sources(self) -> list[str]:
+        return self._rel_sources
+
+    @property
+    def obj_expr(self) -> str:
+        return self._obj_expr
+
+    def __repr__(self) -> str:
+        return (
+            f"MakefileConfigEntry(output_makefile={self.output_makefile!r}, "
+            f"compile_profiles={self.compile_profiles!r}, "
+            f"link_compiler={self.link_compiler!r}, "
+            f"link_flags={self.link_flags!r}, "
+            f"run_args={self.run_args!r}, "
+            f"bin_name={self.bin_name!r}, "
+            f"rel_sources={self.rel_sources!r}, "
+            f"obj_expr={self.obj_expr!r})"
+        )
 
     def _addValidationError(self, errors: JsonErrorsList | None, message: str) -> None:
         if errors is None:
@@ -26,7 +69,7 @@ class MakefileConfigEntry:
         if not isinstance(output_makefile, str) or not output_makefile.strip():
             self._addValidationError(errors, "Makefile config entry 'output_makefile' must be a non-empty string.")
             return
-        self.output_makefile = output_makefile
+        self._output_makefile = output_makefile
 
     def setCompileProfiles(self, compile_profiles: Any, errors: JsonErrorsList | None = None) -> None:
         if not isinstance(compile_profiles, list):
@@ -50,18 +93,17 @@ class MakefileConfigEntry:
                     ]
                 )
 
+        self._compile_profiles = validated_profiles
         if errors is not None and not errors.isEmpty():
-            self.compile_profiles = validated_profiles
             return
 
-        self.compile_profiles = validated_profiles
-        compilers = {profile.compiler for profile in self.compile_profiles if profile.compiler}
+        compilers = {profile.compiler for profile in self._compile_profiles if profile.compiler}
         if "g++" in compilers:
             self.setLinkCompiler("g++")
         elif "gcc" in compilers:
             self.setLinkCompiler("gcc")
-        elif self.compile_profiles:
-            self.setLinkCompiler(self.compile_profiles[0].compiler)
+        elif self._compile_profiles:
+            self.setLinkCompiler(self._compile_profiles[0].compiler)
         else:
             self.setLinkCompiler("")
 
@@ -69,25 +111,25 @@ class MakefileConfigEntry:
         if not isinstance(link_compiler, str) or not link_compiler.strip():
             self._addValidationError(errors, "Makefile config entry 'link_compiler' must be a non-empty string.")
             return
-        self.link_compiler = link_compiler
+        self._link_compiler = link_compiler
 
     def setLinkFlags(self, link_flags: Any, errors: JsonErrorsList | None = None) -> None:
         if not isinstance(link_flags, str):
             self._addValidationError(errors, "Makefile config entry 'link_flags' must be a string.")
             return
-        self.link_flags = link_flags
+        self._link_flags = link_flags
 
     def setRunArgs(self, run_args: Any, errors: JsonErrorsList | None = None) -> None:
         if not isinstance(run_args, str):
             self._addValidationError(errors, "Makefile config entry 'run_args' must be a string.")
             return
-        self.run_args = run_args
+        self._run_args = run_args
 
     def setBinName(self, bin_name: Any, errors: JsonErrorsList | None = None) -> None:
         if not isinstance(bin_name, str) or not bin_name.strip():
             self._addValidationError(errors, "Makefile config entry 'bin_name' must be a non-empty string.")
             return
-        self.bin_name = bin_name
+        self._bin_name = bin_name
 
     def setRelSources(
         self,
@@ -106,7 +148,7 @@ class MakefileConfigEntry:
                 continue
             validated_rel_sources.append(rel_source)
 
-        self.rel_sources = validated_rel_sources
+        self._rel_sources = validated_rel_sources
         if rebuild_derived_fields and (errors is None or errors.isEmpty()):
             self.setCompileProfiles(self._buildCompileProfilesFromRelSources())
             self.setObjExpr(self._buildObjExprFromRelSources())
@@ -115,14 +157,14 @@ class MakefileConfigEntry:
         if not isinstance(obj_expr, str) or not obj_expr.strip():
             self._addValidationError(errors, "Makefile config entry 'obj_expr' must be a non-empty string.")
             return
-        self.obj_expr = obj_expr
+        self._obj_expr = obj_expr
 
     def _getFlagsByCompiler(self) -> dict[str, str]:
-        return {profile.compiler: profile.flags for profile in self.compile_profiles if profile.compiler}
+        return {profile.compiler: profile.flags for profile in self._compile_profiles if profile.compiler}
 
     def _getCompilersByExt(self) -> dict[str, str]:
         compilers_by_ext: dict[str, str] = {}
-        for source in self.rel_sources:
+        for source in self._rel_sources:
             ext = Path(source).suffix
             if not ext or ext in compilers_by_ext:
                 continue
@@ -139,18 +181,18 @@ class MakefileConfigEntry:
     def _buildCompileProfilesFromRelSources(self) -> list[CompileProfile]:
         flags_by_compiler = self._getFlagsByCompiler()
         compilers_by_ext = self._getCompilersByExt()
-        return [
-            CompileProfile(
-                ext=ext,
-                compiler=compiler,
-                flags=flags_by_compiler.get(compiler, ""),
-            )
-            for ext, compiler in compilers_by_ext.items()
-        ]
+        compile_profiles: list[CompileProfile] = []
+        for ext, compiler in compilers_by_ext.items():
+            profile = CompileProfile()
+            profile.setExt(ext)
+            profile.setCompiler(compiler)
+            profile.setFlags(flags_by_compiler.get(compiler, ""))
+            compile_profiles.append(profile)
+        return compile_profiles
 
     def _buildObjExprFromRelSources(self) -> str:
         obj_tokens: list[str] = []
-        for source in self.rel_sources:
+        for source in self._rel_sources:
             if "." in source:
                 obj_tokens.append(source.rsplit(".", 1)[0] + ".o")
             else:
@@ -158,10 +200,10 @@ class MakefileConfigEntry:
         return " ".join(obj_tokens)
 
     def addCompileProfile(self, compile_profile: CompileProfile) -> None:
-        self.setCompileProfiles([*self.compile_profiles, compile_profile])
+        self.setCompileProfiles([*self._compile_profiles, compile_profile])
 
     def addRelSource(self, rel_source: str) -> None:
-        self.setRelSources([*self.rel_sources, rel_source])
+        self.setRelSources([*self._rel_sources, rel_source])
 
     def toJsonObject(self) -> dict[str, Any]:
         return {

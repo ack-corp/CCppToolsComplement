@@ -1,14 +1,31 @@
-from dataclasses import dataclass
 from typing import Any
 
 from srcs.script.exception.exceptionJsonErrorsList import JsonErrorsList, JsonValidationError
 
 
-@dataclass
 class CompileProfile:
-    ext: str = ""
-    compiler: str = ""
-    flags: str = ""
+    def __init__(self) -> None:
+        self._ext = ""
+        self._compiler = ""
+        self._flags = ""
+
+    @property
+    def ext(self) -> str:
+        return self._ext
+
+    @property
+    def compiler(self) -> str:
+        return self._compiler
+
+    @property
+    def flags(self) -> str:
+        return self._flags
+
+    def __repr__(self) -> str:
+        return (
+            f"CompileProfile(ext={self.ext!r}, "
+            f"compiler={self.compiler!r}, flags={self.flags!r})"
+        )
 
     def _addValidationError(self, errors: JsonErrorsList | None, message: str) -> None:
         if errors is None:
@@ -22,19 +39,19 @@ class CompileProfile:
         if not ext.startswith("."):
             self._addValidationError(errors, "Compile profile 'ext' must start with '.'.")
             return
-        self.ext = ext
+        self._ext = ext
 
     def setCompiler(self, compiler: Any, errors: JsonErrorsList | None = None) -> None:
         if not isinstance(compiler, str) or not compiler.strip():
             self._addValidationError(errors, "Compile profile 'compiler' must be a non-empty string.")
             return
-        self.compiler = compiler
+        self._compiler = compiler
 
     def setFlags(self, flags: Any, errors: JsonErrorsList | None = None) -> None:
         if not isinstance(flags, str):
             self._addValidationError(errors, "Compile profile 'flags' must be a string.")
             return
-        self.flags = flags
+        self._flags = flags
 
     def toJsonObject(self) -> dict[str, str]:
         return {
