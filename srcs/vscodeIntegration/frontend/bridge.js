@@ -47,7 +47,7 @@ async function setRunArgsHelper(entryIndex, newArgs) {
     `${PYTHON_MODULE_PREFIX}.action.setEntry`,
     false,
     true,
-    [String(entryIndex), "--run-args", newArgs]
+    [String(entryIndex), `--run-args=${newArgs}`]
   );
 }
 
@@ -60,8 +60,7 @@ async function setCompileFlagsForProfileHelper(entryIndex, profileIndex, newFlag
       String(entryIndex),
       "--compile-profile-index",
       String(profileIndex),
-      "--link-flag-compile-profiles",
-      newFlags
+      `--link-flag-compile-profiles=${newFlags}`
     ]
   );
 }
@@ -71,7 +70,7 @@ async function setLinkFlagsHelper(entryIndex, newFlags) {
     `${PYTHON_MODULE_PREFIX}.action.setEntry`,
     false,
     true,
-    [String(entryIndex), "--link-flags", newFlags]
+    [String(entryIndex), `--link-flags=${newFlags}`]
   );
 }
 
@@ -80,7 +79,7 @@ async function refreshEntrySourcesHelper(entryIndex, relSourcesJson) {
     `${PYTHON_MODULE_PREFIX}.action.setEntry`,
     false,
     false,
-    [String(entryIndex), "--rel-sources-json", relSourcesJson]
+    [String(entryIndex), `--rel-sources-json=${relSourcesJson}`]
   );
 }
 

@@ -9,7 +9,7 @@ const { launchProgram } = require("../../action/launchProgram");
 const { updateRunArgs } = require("../../action/updateRunArgs");
 const { updateCompileFlagsForProfile } = require("../../action/updateCompileFlagsForProfile");
 const { updateLinkFlags } = require("../../action/updateLinkFlags");
-const { deleteEntry } = require("../../action/v2/deleteEntry");
+const { deleteEntry } = require("../../action/deleteEntry");
 
 class MenuNode {
   constructor(label, description, runner = null, args = [], sub = []) {
