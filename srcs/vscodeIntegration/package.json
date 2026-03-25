@@ -2,6 +2,7 @@
   "name": "ccpp-tools-complement",
   "displayName": "CCppToolsComplement",
   "description": "Generate JSON, Makefiles, VSCode integration, then launch debugging for C/C++ programs.",
+  "icon": "resources/icon.png",
   "version": "0.0.1",
   "publisher": "achaisne",
   "files": [
