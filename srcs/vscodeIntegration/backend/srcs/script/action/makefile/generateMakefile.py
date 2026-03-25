@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
-from srcs.script.action.helper.utils import getProgramNameFromMakefileName
 from srcs.script.action.jsonMakefileConfig.verify import verifyJson
 from srcs.script.action.makefile.Makefile import Makefile
 from srcs.script.action.makefile.utils import buildMakefiles, getOutputMakefilePath
@@ -44,6 +43,8 @@ def renderParentMakefile(programs: list[str]) -> str:
         + "re: fclean all\n\n"
         + f".PHONY: {phony}\n"
     )
+
+
 def generateChildMakefiles(makefiles: list[Makefile]) -> dict[Path, set[str]]:
     programs_by_dir: dict[Path, set[str]] = {}
 
@@ -52,7 +53,7 @@ def generateChildMakefiles(makefiles: list[Makefile]) -> dict[Path, set[str]]:
         output_makefile.parent.mkdir(parents=True, exist_ok=True)
         output_makefile.write_text(makefile.generate(), encoding="utf-8")
 
-        program = getProgramNameFromMakefileName(output_makefile)
+        program = Makefile.getProgramNameFromMakefileName(output_makefile)
         if program is not None:
             programs_by_dir.setdefault(output_makefile.parent, set()).add(program)
 

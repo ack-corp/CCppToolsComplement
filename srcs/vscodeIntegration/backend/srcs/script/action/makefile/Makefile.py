@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 from srcs.script.MakefileConfigEntry.CompileProfile import CompileProfile
@@ -8,6 +9,16 @@ FORCED_DEBUG_FLAGS = ("-g3", "-O0")
 
 
 class Makefile:
+    @staticmethod
+    def getProgramNameFromMakefileName(output_makefile: Path) -> str | None:
+        prefix = "Makefile."
+        if not output_makefile.name.startswith(prefix):
+            return None
+        program = output_makefile.name[len(prefix) :].strip()
+        if not program or "." in program:
+            return None
+        return program
+
     def __init__(self, makefile_config_entry: MakefileConfigEntry) -> None:
         self._output_makefile = makefile_config_entry.output_makefile
         self._compile_profiles: list[CompileProfile] = makefile_config_entry.compile_profiles

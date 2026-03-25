@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
-from srcs.script.action.helper.utils import getProgramNameFromMakefileName
 from srcs.script.action.makefile.Makefile import Makefile
 from srcs.script.action.makefile.utils import buildMakefiles, getOutputMakefilePath
 
@@ -12,7 +11,7 @@ def getManagedMakefilePaths(workspace_root: Path, makefiles: list[Makefile]) -> 
     for candidate in workspace_root.rglob("Makefile.*"):
         if not candidate.is_file():
             continue
-        if getProgramNameFromMakefileName(candidate) is None:
+        if Makefile.getProgramNameFromMakefileName(candidate) is None:
             continue
         makefile_paths.add(candidate.resolve())
 

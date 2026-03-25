@@ -5,8 +5,9 @@ from typing import Any
 
 from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
 from srcs.script.MakefileConfigEntry.utils import readEntries
-from srcs.script.action.helper.utils import getProgramNameFromMakefileName, readJsonObject, writeJsonObject
+from srcs.script.action.helper.utils import readJsonObject, writeJsonObject
 from srcs.script.action.jsonMakefileConfig.verify import verifyJson
+from srcs.script.action.makefile.Makefile import Makefile
 
 JsonObject = dict[str, Any]
 JsonItems = list[JsonObject]
@@ -55,7 +56,7 @@ def vscodePathForFsPath(path: Path, workspace: Path) -> str:
 
 def getProgramName(entry: MakefileConfigEntry) -> str:
     output_makefile = Path(entry.output_makefile)
-    program_name = getProgramNameFromMakefileName(output_makefile)
+    program_name = Makefile.getProgramNameFromMakefileName(output_makefile)
     if not program_name:
         raise ValueError(f"Invalid output_makefile for entry: {entry.output_makefile!r}")
     return program_name

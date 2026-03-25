@@ -11,7 +11,7 @@ from srcs.script.MakefileConfigEntry.utils import (
     readEntries,
     writeEntries,
 )
-from srcs.script.action.helper.utils import getProgramNameFromMakefileName
+from srcs.script.action.makefile.Makefile import Makefile
 
 CONFIG_REL_PATH = Path(".vscode/makefileConfig.json")
 
@@ -69,7 +69,7 @@ def rebuildRelSources(entry: MakefileConfigEntry, rel_sources: list[str]) -> lis
         raise ValueError("rel_sources must contain at least one source path")
     project_root = Path.cwd().resolve()
     output_makefile_path = (project_root / entry.output_makefile).resolve()
-    program_name = getProgramNameFromMakefileName(output_makefile_path)
+    program_name = Makefile.getProgramNameFromMakefileName(output_makefile_path)
     if not program_name:
         raise ValueError(f"Invalid output_makefile for entry: {entry.output_makefile!r}")
     main_source_path = (output_makefile_path.parent / rel_sources[0]).resolve()
