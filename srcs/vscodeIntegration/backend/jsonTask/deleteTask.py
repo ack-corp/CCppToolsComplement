@@ -20,9 +20,12 @@ def deleteTask(program_name: str) -> None:
     tasks = tasks_json.get("tasks", [])
     if not isinstance(tasks, list):
         tasks = []
-    task_label = f"build {program_name} (debug)"
+    task_labels = {
+        f"build {program_name} (debug)",
+        f"rebuild {program_name} (debug)",
+    }
     tasks_json["tasks"] = [
-        task for task in tasks if not (isinstance(task, dict) and task.get("label") == task_label)
+        task for task in tasks if not (isinstance(task, dict) and task.get("label") in task_labels)
     ]
     writeJsonObject(tasks_path, tasks_json)
     print(f"Updated {tasks_path}")

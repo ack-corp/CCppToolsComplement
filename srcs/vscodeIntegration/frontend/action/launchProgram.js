@@ -14,7 +14,7 @@ const { promptFlagsForEntry } = require("./form/promptFlagsForEntry");
 const { regenerateLaunchFiles } = require("./utils");
 
 async function launchProgram(args) {
-  const [entryIndex] = args;
+  const [entryIndex, forceRecompile = false] = args;
   const entriesBefore = await getMakefileConfigJson();
   const previousEntry = entriesBefore[entryIndex];
   const refreshStatus = await refreshEntrySourcesHelper(
@@ -40,7 +40,13 @@ async function launchProgram(args) {
     }
   }
   await regenerateLaunchFiles(entryIndex, true);
-  const launchConfig = getLaunchConfiguration(getProgramNameFromEntry(entry));
+  const programName = getProgramNameFromEntry(entry);
+  const launchConfig = {
+    ...getLaunchConfiguration(programName),
+    preLaunchTask: forceRecompile
+      ? `rebuild ${programName} (debug)`
+      : `build ${programName} (debug)`
+  };
   const started = await vscode.debug.startDebugging(globals.workspaceFolder, launchConfig);
   if (!started) {
     throw new Error("VSCode did not start the debugger.");

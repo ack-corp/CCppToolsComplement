@@ -50,14 +50,15 @@ def getProgramName(entry: MakefileConfigEntry) -> str:
     return program_name
 
 
-def makeTask(entry: MakefileConfigEntry, workspace: Path) -> JsonObject:
+def makeTask(entry: MakefileConfigEntry, workspace: Path, target: str) -> JsonObject:
     output_makefile = (workspace / entry.output_makefile).resolve()
     program_name = getProgramName(entry)
+    label_prefix = "build" if target == "all" else "rebuild"
     return {
-        "label": f"build {program_name} (debug)",
+        "label": f"{label_prefix} {program_name} (debug)",
         "type": "shell",
         "command": "make",
-        "args": ["-f", output_makefile.name, "all"],
+        "args": ["-f", output_makefile.name, target],
         "options": {"cwd": vscodePathForFsPath(output_makefile.parent, workspace)},
         "problemMatcher": ["$gcc"],
     }
@@ -70,7 +71,11 @@ def generateTask() -> None:
     tasks_path = (workspace / TASKS_REL_PATH).resolve()
     config_path = (workspace / ".vscode/makefileConfig.json").resolve()
     entries = readEntries(config_path)
-    generated_tasks = [makeTask(entry, workspace) for entry in entries]
+    generated_tasks = [
+        task
+        for entry in entries
+        for task in (makeTask(entry, workspace, "all"), makeTask(entry, workspace, "re"))
+    ]
     tasks_json = readJsonObject(tasks_path, {"version": "2.0.0", "tasks": []})
     existing_tasks = tasks_json.get("tasks", [])
     if not isinstance(existing_tasks, list):

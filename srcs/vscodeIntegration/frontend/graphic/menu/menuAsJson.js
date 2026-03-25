@@ -37,7 +37,14 @@ function createSubAction(entry, entryIndex) {
       "Launch program",
       "Build if needed and start the debugger",
       launchProgram,
-      [entryIndex],
+      [entryIndex, false],
+      []
+    ),
+    new MenuNode(
+      "Launch re",
+      "Force recompile, then start the debugger",
+      launchProgram,
+      [entryIndex, true],
       []
     ),
     new MenuNode(
