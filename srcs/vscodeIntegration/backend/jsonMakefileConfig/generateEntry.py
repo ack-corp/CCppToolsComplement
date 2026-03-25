@@ -3,16 +3,14 @@ import argparse
 import os
 from pathlib import Path
 
-from srcs.script.action.helper.getRelSources import getRelSources
-from srcs.script.action.helper.getRelSources import getMainPath, getOutputPath
-from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-from srcs.script.MakefileConfigEntry.utils import (
+from helper.getRelSources import getRelSources
+from helper.getRelSources import getMainPath, getOutputPath
+from models.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from models.MakefileConfigEntry.utils import (
     readEntries,
     upsertEntry,
     writeEntries,
 )
-
-CONFIG_REL_PATH = Path(".vscode/makefileConfig.json")
 
 
 def parse_args() -> argparse.Namespace:
@@ -67,7 +65,7 @@ def main() -> None:
         args.run_args,
         args.bin_name,
     )
-    config_path = (Path.cwd() / CONFIG_REL_PATH).resolve()
+    config_path = (Path.cwd() / ".vscode/makefileConfig.json").resolve()
     entries = readEntries(config_path)
     entries = upsertEntry(entries, entry)
     writeEntries(config_path, entries)

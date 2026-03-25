@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Any
 
-from srcs.script.MakefileConfigEntry.CompileProfile import CompileProfile
-from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-from srcs.script.exception.exceptionJsonErrorsList import JsonErrorsList, JsonValidationError
+from models.MakefileConfigEntry.CompileProfile import CompileProfile
+from models.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from models.Exeption.exceptionJsonErrorsList import JsonErrorsList, JsonValidationError
 
 FORCED_DEBUG_FLAGS = ("-g3", "-O0")
 

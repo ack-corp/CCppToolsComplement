@@ -1,17 +1,7 @@
 import json
 from pathlib import Path
 from typing import Any
-
-from srcs.script.MakefileConfigEntry.CompileProfile import CompileProfile
-from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-
-
-def makeEmptyCompileProfile() -> CompileProfile:
-    return CompileProfile()
-
-
-def makeEmptyMakefileConfigEntry() -> MakefileConfigEntry:
-    return MakefileConfigEntry()
+from models.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
 
 
 def parseMakefileConfigEntries(data: Any) -> list[MakefileConfigEntry]:
@@ -28,6 +18,14 @@ def readEntries(config_path: Path) -> list[MakefileConfigEntry]:
     if not config_path.exists():
         return []
     return parseMakefileConfigEntriesJson(config_path.read_text(encoding="utf-8"))
+
+
+def getEntryByIndex(entries: list[MakefileConfigEntry], entry_index: int) -> MakefileConfigEntry:
+    if not entries:
+        raise ValueError("No program entries found in .vscode/makefileConfig.json")
+    if entry_index < 0 or entry_index >= len(entries):
+        raise ValueError(f"Entry index {entry_index} is out of range.")
+    return entries[entry_index]
 
 
 def upsertEntry(entries: list[MakefileConfigEntry], next_entry: MakefileConfigEntry) -> list[MakefileConfigEntry]:

@@ -2,7 +2,7 @@
 import argparse
 from pathlib import Path
 
-from srcs.script.action.helper.utils import readJsonObject, writeJsonObject
+from helper.utils import readJsonObject, writeJsonObject
 
 TASKS_REL_PATH = Path(".vscode/tasks.json")
 

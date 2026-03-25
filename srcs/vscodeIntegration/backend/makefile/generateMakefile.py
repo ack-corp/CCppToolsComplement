@@ -2,12 +2,10 @@
 import argparse
 from pathlib import Path
 
-from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-from srcs.script.MakefileConfigEntry.utils import readEntries
-from srcs.script.action.jsonMakefileConfig.verify import verifyJson
-from srcs.script.action.makefile.Makefile import Makefile
-
-CONFIG_REL_PATH = Path(".vscode/makefileConfig.json")
+from models.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from models.MakefileConfigEntry.utils import getEntryByIndex, readEntries
+from jsonMakefileConfig.verify import verifyJson
+from models.Makefile.Makefile import Makefile
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,14 +18,6 @@ def parse_args() -> argparse.Namespace:
         help="Generate the makefile for the entry at this index.",
     )
     return parser.parse_args()
-
-
-def getEntryByIndex(entries: list[MakefileConfigEntry], entry_index: int) -> MakefileConfigEntry:
-    if not entries:
-        raise ValueError("No program entries found in .vscode/makefileConfig.json")
-    if entry_index < 0 or entry_index >= len(entries):
-        raise ValueError(f"Entry index {entry_index} is out of range.")
-    return entries[entry_index]
 
 
 def renderParentMakefile(programs: list[str]) -> str:
@@ -86,7 +76,7 @@ def generateMakefile(entry_index: int) -> None:
         raise SystemExit("Makefile configuration verification failed.")
 
     workspace_root = Path.cwd().resolve()
-    config_path = (workspace_root / CONFIG_REL_PATH).resolve()
+    config_path = (workspace_root / ".vscode/makefileConfig.json").resolve()
     entries = readEntries(config_path)
     entry = getEntryByIndex(entries, entry_index)
     makefile = Makefile(entry)

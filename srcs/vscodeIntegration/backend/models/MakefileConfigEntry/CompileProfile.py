@@ -1,6 +1,5 @@
 from typing import Any
-
-from srcs.script.exception.exceptionJsonErrorsList import JsonErrorsList, JsonValidationError
+from models.Exeption.exceptionJsonErrorsList import JsonErrorsList, JsonValidationError
 
 
 class CompileProfile:

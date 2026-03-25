@@ -1,8 +1,7 @@
 from pathlib import Path
 from typing import Any
-
-from srcs.script.MakefileConfigEntry.CompileProfile import CompileProfile
-from srcs.script.exception.exceptionJsonErrorsList import JsonErrorsList, JsonValidationError
+from models.MakefileConfigEntry.CompileProfile import CompileProfile
+from models.Exeption.exceptionJsonErrorsList import JsonErrorsList, JsonValidationError
 
 
 class MakefileConfigEntry:

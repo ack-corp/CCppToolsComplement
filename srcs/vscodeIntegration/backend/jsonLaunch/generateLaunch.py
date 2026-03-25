@@ -3,15 +3,12 @@ import shlex
 from pathlib import Path
 from typing import Any
 
-from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-from srcs.script.MakefileConfigEntry.utils import readEntries
-from srcs.script.action.helper.utils import readJsonObject, writeJsonObject
-from srcs.script.action.jsonMakefileConfig.verify import verifyJson
-from srcs.script.action.makefile.Makefile import Makefile
-
-JsonObject = dict[str, Any]
-JsonItems = list[JsonObject]
-LAUNCH_REL_PATH = Path(".vscode/launch.json")
+from models.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from models.MakefileConfigEntry.utils import readEntries
+from models.type import JsonItems, JsonObject
+from helper.utils import readJsonObject, writeJsonObject
+from jsonMakefileConfig.verify import verifyJson
+from models.Makefile.Makefile import Makefile
 
 
 def splitArgs(value: str) -> list[str]:
@@ -94,7 +91,7 @@ def generateLaunch() -> None:
     if verifyJson() != 0:
         raise SystemExit("Makefile configuration verification failed.")
     workspace = Path.cwd().resolve()
-    launch_path = (workspace / LAUNCH_REL_PATH).resolve()
+    launch_path = (workspace / ".vscode/launch.json").resolve()
     config_path = (workspace / ".vscode/makefileConfig.json").resolve()
     entries = readEntries(config_path)
     generated_launches = [makeLaunch(entry, workspace) for entry in entries]

@@ -2,14 +2,13 @@
 from pathlib import Path
 from typing import Any
 
-from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-from srcs.script.MakefileConfigEntry.utils import readEntries
-from srcs.script.action.helper.utils import readJsonObject, writeJsonObject
-from srcs.script.action.jsonMakefileConfig.verify import verifyJson
-from srcs.script.action.makefile.Makefile import Makefile
+from models.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from models.MakefileConfigEntry.utils import readEntries
+from models.type import JsonItems, JsonObject
+from helper.utils import readJsonObject, writeJsonObject
+from jsonMakefileConfig.verify import verifyJson
+from models.Makefile.Makefile import Makefile
 
-JsonObject = dict[str, Any]
-JsonItems = list[JsonObject]
 TASKS_REL_PATH = Path(".vscode/tasks.json")
 
 

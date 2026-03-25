@@ -1,8 +1,3 @@
-/**
- * @typedef {import("../../../shared/prototype").CompileProfile} CompileProfile
- * @typedef {import("../../../shared/prototype").MakefileConfigEntry} MakefileConfigEntry
- */
-
 const { getMakefileConfigJson, getProgramNameFromEntry } = require("../../utils/various");
 const { createLaunch } = require("../../action/createLaunch");
 const { launchProgram } = require("../../action/launchProgram");

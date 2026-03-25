@@ -2,13 +2,11 @@
 import argparse
 from pathlib import Path
 
-from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-from srcs.script.MakefileConfigEntry.utils import (
+from models.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from models.MakefileConfigEntry.utils import (
     readEntries,
     writeEntries,
 )
-
-CONFIG_REL_PATH = Path(".vscode/makefileConfig.json")
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,7 +31,7 @@ def deleteEntryAtIndex(entries: list[MakefileConfigEntry], entry_index: int) -> 
 
 def main() -> None:
     args = parse_args()
-    config_path = (Path.cwd().resolve() / CONFIG_REL_PATH).resolve()
+    config_path = (Path.cwd().resolve() / ".vscode/makefileConfig.json").resolve()
     entries = readEntries(config_path)
     deleteEntryAtIndex(entries, args.entry_index)
     writeEntries(config_path, entries)

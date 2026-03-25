@@ -30,6 +30,9 @@ async function runMenu(loadMenu) {
     const currentMenu = getCurrentMenu(menuStack);
     const items = getMenuItems(currentMenu, canGoBack(menuStack));
     const selected = await pickQuickPickItem(items, currentMenu.placeHolder);
+    if (!selected) {
+      return;
+    }
     if (!selected.node) {
       goBack(menuStack);
     } else if (hasSubMenu(selected.node)) {
@@ -86,13 +89,9 @@ async function executeMenuNode(node) {
 }
 
 async function pickQuickPickItem(items, placeHolder) {
-  const selected = await vscode.window.showQuickPick(items, {
+  return vscode.window.showQuickPick(items, {
     placeHolder
   });
-  if (!selected) {
-    throw new Error("Menu selection was cancelled.");
-  }
-  return selected;
 }
 
 module.exports = {

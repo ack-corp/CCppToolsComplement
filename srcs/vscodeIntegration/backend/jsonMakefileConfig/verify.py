@@ -2,10 +2,8 @@
 import json
 from pathlib import Path
 
-from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-from srcs.script.exception.exceptionJsonErrorsList import JsonValidationError
-
-CONFIG_REL_PATH = Path(".vscode/makefileConfig.json")
+from models.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from models.Exeption.exceptionJsonErrorsList import JsonValidationError
 
 
 def getEntryErrors(data: object) -> tuple[list[MakefileConfigEntry], list[str]]:
@@ -44,7 +42,7 @@ def printSummary(errors: list[str], config_path: Path, entries: list[MakefileCon
 
 
 def verifyJson() -> int:
-    config_path = Path.cwd() / CONFIG_REL_PATH
+    config_path = Path.cwd() / ".vscode/makefileConfig.json"
     entries, errors = getEntries(config_path.resolve())
     printSummary(errors, config_path.resolve(), entries)
     return 1 if errors else 0

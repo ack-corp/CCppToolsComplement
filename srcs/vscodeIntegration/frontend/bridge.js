@@ -1,10 +1,8 @@
 const { runPythonModuleTask } = require("./utils/pythonRunner");
 
-const PYTHON_MODULE_PREFIX = "srcs.script";
-
 async function generateJson(args) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonMakefileConfig.generateEntry`,
+    "jsonMakefileConfig.generateEntry",
     false,
     true,
     args
@@ -13,7 +11,7 @@ async function generateJson(args) {
 
 async function verifyJson(args, throwOnError = true) {
   return runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonMakefileConfig.verify`,
+    "jsonMakefileConfig.verify",
     false,
     throwOnError
   );
@@ -21,7 +19,7 @@ async function verifyJson(args, throwOnError = true) {
 
 async function generateMakefile(entryIndex) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.makefile.generateMakefile`,
+    "makefile.generateMakefile",
     false,
     true,
     [String(entryIndex)]
@@ -30,21 +28,21 @@ async function generateMakefile(entryIndex) {
 
 async function generateTask() {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonTask.generateTask`,
+    "jsonTask.generateTask",
     false
   );
 }
 
 async function generateLaunch() {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonLaunch.generateLaunch`,
+    "jsonLaunch.generateLaunch",
     false
   );
 }
 
 async function deleteEntryHelper(entryIndex) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonMakefileConfig.deleteEntry`,
+    "jsonMakefileConfig.deleteEntry",
     false,
     true,
     [String(entryIndex)]
@@ -53,7 +51,7 @@ async function deleteEntryHelper(entryIndex) {
 
 async function deleteTask(programName) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonTask.deleteTask`,
+    "jsonTask.deleteTask",
     false,
     true,
     [String(programName)]
@@ -62,7 +60,7 @@ async function deleteTask(programName) {
 
 async function deleteLaunch(programName) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonLaunch.deleteLaunch`,
+    "jsonLaunch.deleteLaunch",
     false,
     true,
     [String(programName)]
@@ -71,7 +69,7 @@ async function deleteLaunch(programName) {
 
 async function setRunArgsHelper(entryIndex, newArgs) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonMakefileConfig.setEntry`,
+    "jsonMakefileConfig.setEntry",
     false,
     true,
     [String(entryIndex), `--run-args=${newArgs}`]
@@ -80,7 +78,7 @@ async function setRunArgsHelper(entryIndex, newArgs) {
 
 async function setCompileFlagsForProfileHelper(entryIndex, profileIndex, newFlags) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonMakefileConfig.setEntry`,
+    "jsonMakefileConfig.setEntry",
     false,
     true,
     [
@@ -94,7 +92,7 @@ async function setCompileFlagsForProfileHelper(entryIndex, profileIndex, newFlag
 
 async function setLinkFlagsHelper(entryIndex, newFlags) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonMakefileConfig.setEntry`,
+    "jsonMakefileConfig.setEntry",
     false,
     true,
     [String(entryIndex), `--link-flags=${newFlags}`]
@@ -103,7 +101,7 @@ async function setLinkFlagsHelper(entryIndex, newFlags) {
 
 async function refreshEntrySourcesHelper(entryIndex, relSourcesJson) {
   return runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.jsonMakefileConfig.setEntry`,
+    "jsonMakefileConfig.setEntry",
     false,
     false,
     [String(entryIndex), `--rel-sources-json=${relSourcesJson}`]
@@ -112,7 +110,7 @@ async function refreshEntrySourcesHelper(entryIndex, relSourcesJson) {
 
 async function deleteMakefile(entryIndex) {
   await runPythonModuleTask(
-    `${PYTHON_MODULE_PREFIX}.action.makefile.deleteMakefile`,
+    "makefile.deleteMakefile",
     false,
     true,
     [String(entryIndex)]

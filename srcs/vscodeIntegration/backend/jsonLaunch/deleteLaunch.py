@@ -2,9 +2,7 @@
 import argparse
 from pathlib import Path
 
-from srcs.script.action.helper.utils import readJsonObject, writeJsonObject
-
-LAUNCH_REL_PATH = Path(".vscode/launch.json")
+from helper.utils import readJsonObject, writeJsonObject
 
 
 def parse_args() -> argparse.Namespace:
@@ -15,7 +13,7 @@ def parse_args() -> argparse.Namespace:
 
 def deleteLaunch(program_name: str) -> None:
     workspace = Path.cwd().resolve()
-    launch_path = (workspace / LAUNCH_REL_PATH).resolve()
+    launch_path = (workspace / ".vscode/launch.json").resolve()
     launch_json = readJsonObject(launch_path, {"version": "0.2.0", "configurations": []})
     configurations = launch_json.get("configurations", [])
     if not isinstance(configurations, list):

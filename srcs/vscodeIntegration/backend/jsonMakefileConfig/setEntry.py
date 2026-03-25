@@ -5,15 +5,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from srcs.script.action.helper.getRelSources import getRelSources
-from srcs.script.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
-from srcs.script.MakefileConfigEntry.utils import (
+from helper.getRelSources import getRelSources
+from models.MakefileConfigEntry.MakefileConfigEntry import MakefileConfigEntry
+from models.MakefileConfigEntry.utils import (
+    getEntryByIndex,
     readEntries,
     writeEntries,
 )
-from srcs.script.action.makefile.Makefile import Makefile
-
-CONFIG_REL_PATH = Path(".vscode/makefileConfig.json")
+from models.Makefile.Makefile import Makefile
 
 
 def parse_args() -> argparse.Namespace:
@@ -47,15 +46,6 @@ def parse_args() -> argparse.Namespace:
         help="New rel_sources JSON array.",
     )
     return parser.parse_args()
-
-
-def getEntryByIndex(entries: list[MakefileConfigEntry], entry_index: int) -> MakefileConfigEntry:
-    if not entries:
-        raise ValueError("No program entries found in .vscode/makefileConfig.json")
-    if entry_index < 0 or entry_index >= len(entries):
-        raise ValueError(f"Entry index {entry_index} is out of range.")
-    return entries[entry_index]
-
 
 def parseRelSourcesJson(json_text: str) -> list[str]:
     data = json.loads(json_text)
@@ -102,7 +92,7 @@ def updateEntry(entry: MakefileConfigEntry, args: argparse.Namespace) -> int:
 
 def main() -> None:
     args = parse_args()
-    config_path = (Path.cwd() / CONFIG_REL_PATH).resolve()
+    config_path = (Path.cwd() / ".vscode/makefileConfig.json").resolve()
     entries = readEntries(config_path)
     entry = getEntryByIndex(entries, args.entry_index)
     previous_entry: dict[str, Any] = entry.toJsonObject()
