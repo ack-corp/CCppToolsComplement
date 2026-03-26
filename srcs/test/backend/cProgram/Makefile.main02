@@ -1,7 +1,7 @@
 LINK_COMPILER = gcc
 LINK_FLAGS = -Wall -g3 -O0
-ARGS = myargs
-BIN = main01.out
+ARGS = my args 2
+BIN = main02.out
 SRCS = main1.c one.c subfolder/two.c
 OBJS = main1.o one.o subfolder/two.o
 DEPS = $(OBJS:.o=.d)

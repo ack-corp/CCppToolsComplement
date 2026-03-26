@@ -1,44 +1,117 @@
-# VSCode Extension
+# CCppToolsComplement
 
-This folder contains the VSCode extension for the project.
+<p align="center">
+  <img src="resources/demo-promo.gif" alt="Demo of launch creation and debugger flow" />
+</p>
 
-## What it does
+CCppToolsComplement is a Visual Studio Code extension that helps manage and debug C and C++ programs from a workspace-level `.vscode/makefileConfig.json` file.
 
-The command `CCppToolsComplement: Generate and Debug Current File`:
-- opens a first quick-pick with the programs found in `.vscode/makefileConfig.json`
-- for each program, opens a second quick-pick with program-specific actions
-- supports `Launch program`, `Set args`, `Set compile flags`, and `Set link flags`
-- writes config changes back into `.vscode/makefileConfig.json`
-- regenerates Makefiles or VSCode launch integration after edits when needed
-- also offers a `Create new launch` action from the first picker
-- when `Create new launch` is selected, runs the backend `jsonMakefileConfig.generateEntry` Python module in an integrated terminal so you can answer the prompts
-- then regenerates the Makefiles and VSCode integration files
+It is designed for projects that generate build and debug configuration from that JSON file, then use VS Code and the C/C++ extension to launch the debugger.
 
-The command is also exposed from the editor title when a `c` or `cpp` file is active.
 
-## Package the extension
+## Features
 
-From this folder:
+- Adds the command `CCppToolsComplement: Generate and Debug Current File`.
+- Shows the command in the top-right corner of the editor when a `c` or `cpp` file is active : <img src="resources/play-dark.svg" alt="Play icon" width="14" height="14" />
+- Reads program entries from `.vscode/makefileConfig.json`.
+- Lets you create a new program entry from inside VS Code.
+- Lets you update run arguments, compile flags, and link flags for an existing entry.
+- Starts the debugger through `ms-vscode.cpptools`.
 
-```bash
-npm install -g @vscode/vsce
-vsce package
+### Menu Overview
+
+Stage 1: pick an existing program entry or create a new launch.
+
+<p align="center">
+  <img src="resources/menu01.png" alt="First menu showing existing entries and the create new launch action" />
+</p>
+
+Stage 2: manage the selected entry, including launch, arguments, and flags.
+
+<p align="center">
+  <img src="resources/menu02.png" alt="Second menu showing launch, arguments, and flags actions for one entry" />
+</p>
+
+
+## Prerequisites
+
+Before using the extension, make sure the following are available:
+
+1. Visual Studio Code `1.85.0` or later.
+2. The Microsoft C/C++ extension: `ms-vscode.cpptools`.
+3. A Python interpreter available as `python3`, or another executable configured through the `ccppToolsComplement.pythonPath` setting.
+4. A folder opened as a VS Code workspace.
+
+This extension works against the first workspace folder and expects project configuration files under that folder.
+
+## Expected Project Files
+
+The extension expects a workspace layout based on `.vscode/makefileConfig.json`.
+
+- `.vscode/makefileConfig.json`
+  This is the main source of truth for program entries.
+- `.vscode/launch.json`
+  Generated or refreshed by the extension workflow.
+
+If `.vscode/makefileConfig.json` does not exist yet, you can create a first entry through the extension by using `Create new launch`.
+
+## How To Use
+
+1. Open your project folder in VS Code.
+2. Open a `.c` or `.cpp` file.
+3. Run `CCppToolsComplement: Generate and Debug Current File` from the Command Palette, or click the editor title button.
+4. Pick an existing program entry, or choose `Create new launch`.
+
+### Create a New Launch
+
+When you choose `Create new launch`, the extension asks for:
+
+- `Main path`
+- `Program name`
+- `Run arguments`
+- `Binary name`
+
+It then creates a new entry in `.vscode/makefileConfig.json`, asks for build flags, and regenerates the related VS Code integration files.
+
+### Manage an Existing Entry
+
+For each existing program entry, the extension offers:
+
+- `Launch program`
+  Build if needed, then start debugging.
+- `Launch re`
+  Force a rebuild, then start debugging.
+- `Set args`
+  Update the runtime argument string stored in `.vscode/makefileConfig.json`.
+- `Set compile flags`
+  Edit compile flags for each detected compile profile.
+- `Set link flags`
+  Edit linker flags.
+- `Delete entry`
+  Remove the selected program entry.
+
+## Extension Setting
+
+### `ccppToolsComplement.pythonPath`
+
+Path or command name for the Python executable used to run the bundled backend scripts.
+
+Default:
+
+```json
+{
+  "ccppToolsComplement.pythonPath": "python3"
+}
 ```
 
-This produces a `.vsix` file that can be installed in VSCode.
+Set this if your system uses a different Python command, such as `python`.
 
 ## Notes
 
-- The extension depends on `ms-vscode.cpptools`.
-- The default Python executable is `python3`.
-- You can change it through the `ccppToolsComplement.pythonPath` setting.
-- The packaged extension now includes its Python scripts under `backend/`, so it no longer depends on sibling files outside the extension folder.
+- The extension bundles its backend Python modules inside the published package.
+- The debugger launch is delegated to the C/C++ extension.
+- The extension validates `.vscode/makefileConfig.json` before reading program entries.
 
+## Release / Packaging
 
-## frontend/extension.js
-
-    entry point : activate
-    like q constructor
-
-    output point : deactivate
-    like a destructor
+This README is intended to be the Marketplace-facing description for the extension. Packaging and publishing steps are documented separately in the repository.
