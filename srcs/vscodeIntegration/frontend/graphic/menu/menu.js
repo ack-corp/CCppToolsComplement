@@ -1,10 +1,16 @@
 const vscode = require("vscode");
-const { createMenu } = require("./menuAsJson");
+const { createMenu } = require("./playMenu");
+const { createGearMenu } = require("./gearMenu");
 const { launchProgram } = require("../../action/launchProgram");
 
 async function pickProgram() {
   const loadMenu = () => createMenu();
-  await runMenu(loadMenu);
+  await runMenu(loadMenu, "Select a program");
+}
+
+async function pickGearMenu() {
+  const loadMenu = () => createGearMenu();
+  await runMenu(loadMenu, "More options");
 }
 
 function getMenuItems(currentMenu, includeBack) {
@@ -23,8 +29,8 @@ function getMenuItems(currentMenu, includeBack) {
   return items;
 }
 
-async function runMenu(loadMenu) {
-  let menuStack = createMenuStack(await loadMenu());
+async function runMenu(loadMenu, rootPlaceHolder = "Select a program") {
+  let menuStack = createMenuStack(await loadMenu(), rootPlaceHolder);
   let shouldExitMenu = false;
   while (!shouldExitMenu && menuStack.length > 0) {
     const currentMenu = getCurrentMenu(menuStack);
@@ -40,17 +46,17 @@ async function runMenu(loadMenu) {
     } else {
       const actionResult = await executeMenuNode(selected.node);
       if (actionResult.refreshMenu) {
-        menuStack = createMenuStack(await loadMenu());
+        menuStack = createMenuStack(await loadMenu(), rootPlaceHolder);
       }
       shouldExitMenu = actionResult.shouldExitMenu;
     }
   }
 }
 
-function createMenuStack(rootMenuNodes) {
+function createMenuStack(rootMenuNodes, rootPlaceHolder) {
   return [{
     menuNodes: rootMenuNodes,
-    placeHolder: "Select a program"
+    placeHolder: rootPlaceHolder
   }];
 }
 
@@ -95,5 +101,7 @@ async function pickQuickPickItem(items, placeHolder) {
 }
 
 module.exports = {
-  pickProgram
+  pickProgram,
+  pickGearMenu,
+  runMenu
 };

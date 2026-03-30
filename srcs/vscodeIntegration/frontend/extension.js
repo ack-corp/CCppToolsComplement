@@ -1,7 +1,7 @@
 const vscode = require("vscode");
 const { setGlobals } = require("./globals");
 const { createFakeCamelCaseController } = require("./fakeCamelCase/controller");
-const { pickProgram } = require("./graphic/menu/menu");
+const { pickProgram, pickGearMenu } = require("./graphic/menu/menu");
 
 function activate(context) {
   context.subscriptions.push(createFakeCamelCaseController());
@@ -17,7 +17,12 @@ function activate(context) {
   });
 
   const previewGearIconCommand = vscode.commands.registerCommand("ccppToolsComplement.previewGearIcon", async () => {
-    vscode.window.showInformationMessage("Gear icon preview command.");
+    try {
+      await pickGearMenu();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      vscode.window.showErrorMessage(message);
+    }
   });
 
   context.subscriptions.push(generateAndDebugCommand, previewGearIconCommand);
