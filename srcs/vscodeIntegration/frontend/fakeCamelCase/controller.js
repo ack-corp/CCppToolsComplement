@@ -85,16 +85,21 @@ function updateEditor(editor, decorationType) {
   for (const visibleRange of editor.visibleRanges) {
     const startOffset = editor.document.offsetAt(visibleRange.start);
     const endOffset = editor.document.offsetAt(visibleRange.end);
-    const text = editor.document.getText(visibleRange);
-    const matches = findFakeCamelCaseMatches(text);
+    const text = editor.document.getText(
+      new vscode.Range(
+        editor.document.positionAt(0),
+        visibleRange.end
+      )
+    );
+    const matches = findFakeCamelCaseMatches(text, startOffset);
 
     for (const match of matches) {
       const color = getOverlayColor(match, text);
       decorations.push(
         createDecoration(
           editor,
-          startOffset + match.index,
-          startOffset + match.index + match.source.length,
+          match.index,
+          match.index + match.source.length,
           match.source,
           match.display,
           color

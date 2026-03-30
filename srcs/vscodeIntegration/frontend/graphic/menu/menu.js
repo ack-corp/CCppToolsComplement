@@ -30,8 +30,8 @@ function getMenuItems(currentMenu, includeBack) {
 }
 
 async function runMenu(loadMenu, rootPlaceHolder = "Select a program") {
-  let menuStack = createMenuStack(await loadMenu(), rootPlaceHolder);
   let shouldExitMenu = false;
+  let menuStack = createMenuStack(await loadMenu(), rootPlaceHolder);
   while (!shouldExitMenu && menuStack.length > 0) {
     const currentMenu = getCurrentMenu(menuStack);
     const items = getMenuItems(currentMenu, canGoBack(menuStack));
@@ -44,11 +44,10 @@ async function runMenu(loadMenu, rootPlaceHolder = "Select a program") {
     } else if (hasSubMenu(selected.node)) {
       openSubMenu(menuStack, selected.node);
     } else {
-      const actionResult = await executeMenuNode(selected.node);
-      if (actionResult.refreshMenu) {
+      shouldExitMenu = await executeMenuNode(selected.node);
+      if (!shouldExitMenu) {
         menuStack = createMenuStack(await loadMenu(), rootPlaceHolder);
       }
-      shouldExitMenu = actionResult.shouldExitMenu;
     }
   }
 }
@@ -85,13 +84,10 @@ function openSubMenu(menuStack, node) {
 
 async function executeMenuNode(node) {
   if (typeof node.runner !== "function") {
-    return { shouldExitMenu: false, refreshMenu: false };
+    return false;
   }
   await node.runner(node.args);
-  return {
-    shouldExitMenu: node.runner === launchProgram,
-    refreshMenu: node.runner !== launchProgram
-  };
+  return node.runner === launchProgram;
 }
 
 async function pickQuickPickItem(items, placeHolder) {

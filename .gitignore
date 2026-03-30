@@ -6,3 +6,4 @@ srcs/test/backend/cProgram/Makefile
 srcs/test/backend/cProgram/Makefile.*
 *.vsix
 ccpp-tools-complement-0*
+.codex

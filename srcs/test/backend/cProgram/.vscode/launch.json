@@ -6,9 +6,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/main01.out",
-      "args": [
-        "myargs"
-      ],
+      "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
@@ -29,11 +27,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/main02.out",
-      "args": [
-        "my",
-        "args",
-        "2"
-      ],
+      "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

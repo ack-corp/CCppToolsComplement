@@ -5,12 +5,12 @@
       {
         "ext": ".c",
         "compiler": "gcc",
-        "flags": "-Werror"
+        "flags": ""
       }
     ],
     "link_compiler": "gcc",
-    "link_flags": "-Wall",
-    "run_args": "myargs",
+    "link_flags": "",
+    "run_args": "",
     "bin_name": "main01.out",
     "rel_sources": [
       "main1.c",
@@ -25,18 +25,18 @@
       {
         "ext": ".c",
         "compiler": "gcc",
-        "flags": "-Werror"
+        "flags": "-Wall -Wextra -Werror"
       }
     ],
     "link_compiler": "gcc",
-    "link_flags": "-Wall",
-    "run_args": "my args 2",
+    "link_flags": "-Wall -Wextra -Werror",
+    "run_args": "",
     "bin_name": "main02.out",
     "rel_sources": [
-      "main1.c",
+      "main2.c",
       "one.c",
       "subfolder/two.c"
     ],
-    "obj_expr": "main1.o one.o subfolder/two.o"
+    "obj_expr": "main2.o one.o subfolder/two.o"
   }
 ]

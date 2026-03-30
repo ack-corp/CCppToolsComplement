@@ -12,22 +12,127 @@ function toFakeCamelCase(identifier) {
   }).join("");
 }
 
-function findFakeCamelCaseMatches(text) {
-  const matches = [];
-  const pattern = /\b[a-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+\b/g;
-  let match = pattern.exec(text);
+function isIdentifierChar(char) {
+  return /[A-Za-z0-9_]/.test(char);
+}
 
-  while (match) {
-    const source = match[0];
-    const display = toFakeCamelCase(source);
-    if (display !== source) {
-      matches.push({
-        index: match.index,
-        source,
-        display
-      });
+function isIdentifierStart(char) {
+  return /[a-z]/.test(char);
+}
+
+function isEscaped(text, index) {
+  let backslashCount = 0;
+  for (let cursor = index - 1; cursor >= 0 && text[cursor] === "\\"; cursor -= 1) {
+    backslashCount += 1;
+  }
+  return backslashCount % 2 === 1;
+}
+
+function findFakeCamelCaseMatches(text, startIndex = 0) {
+  const matches = [];
+  let cursor = 0;
+  let inLineComment = false;
+  let inBlockComment = false;
+  let inString = false;
+  let inChar = false;
+
+  while (cursor < text.length) {
+    const char = text[cursor];
+    const nextChar = text[cursor + 1] ?? "";
+
+    if (inLineComment) {
+      if (char === "\n") {
+        inLineComment = false;
+      }
+      cursor += 1;
+      continue;
     }
-    match = pattern.exec(text);
+
+    if (inBlockComment) {
+      if (char === "*" && nextChar === "/") {
+        inBlockComment = false;
+        cursor += 2;
+        continue;
+      }
+      cursor += 1;
+      continue;
+    }
+
+    if (inString) {
+      if (char === "\"" && !isEscaped(text, cursor)) {
+        inString = false;
+      }
+      cursor += 1;
+      continue;
+    }
+
+    if (inChar) {
+      if (char === "'" && !isEscaped(text, cursor)) {
+        inChar = false;
+      }
+      cursor += 1;
+      continue;
+    }
+
+    if (char === "/" && nextChar === "/") {
+      inLineComment = true;
+      cursor += 2;
+      continue;
+    }
+
+    if (char === "/" && nextChar === "*") {
+      inBlockComment = true;
+      cursor += 2;
+      continue;
+    }
+
+    if (char === "\"") {
+      inString = true;
+      cursor += 1;
+      continue;
+    }
+
+    if (char === "'") {
+      inChar = true;
+      cursor += 1;
+      continue;
+    }
+
+    if (!isIdentifierStart(char)) {
+      cursor += 1;
+      continue;
+    }
+
+    const previousChar = cursor > 0 ? text[cursor - 1] : "";
+    if (previousChar && isIdentifierChar(previousChar)) {
+      cursor += 1;
+      continue;
+    }
+
+    let end = cursor + 1;
+    while (end < text.length && isIdentifierChar(text[end])) {
+      end += 1;
+    }
+
+    const source = text.slice(cursor, end);
+    const nextBoundaryChar = end < text.length ? text[end] : "";
+    if (
+      source.includes("_")
+      && /^(?:[a-z][A-Za-z0-9]*)(?:_[A-Za-z0-9]+)+$/.test(source)
+      && (!nextBoundaryChar || !isIdentifierChar(nextBoundaryChar))
+      && cursor >= startIndex
+    ) {
+      const display = toFakeCamelCase(source);
+      if (display !== source) {
+        matches.push({
+          index: cursor,
+          source,
+          display
+        });
+      }
+    }
+
+    cursor = end;
   }
 
   return matches;
