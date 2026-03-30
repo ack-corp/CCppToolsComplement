@@ -13,7 +13,7 @@ It is designed for projects that generate build and debug configuration from tha
 
 - Adds the command `CCppToolsComplement: Generate and Debug Current File`.
 - Shows the command in the top-right corner of the editor when a `c` or `cpp` file is active : <img src="resources/play-dark.png" alt="Play icon" width="14" height="14" />
-- Adds a gear icon in the editor title for extra options like hidden suffixes and fake camel case : <img src="resources/gear.svg" alt="Gear icon" width="14" height="14" />
+- Adds a gear icon in the editor title for extra options like hidden suffixes and fake camel case : <img src="resources/gear.png" alt="Gear icon" width="14" height="14" />
 - Reads program entries from `.vscode/makefileConfig.json`.
 - Lets you create a new program entry from inside VS Code.
 - Lets you update run arguments, compile flags, and link flags for an existing entry.
