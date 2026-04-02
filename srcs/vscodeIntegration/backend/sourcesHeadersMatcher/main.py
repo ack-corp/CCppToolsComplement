@@ -2,6 +2,7 @@
 
 def traverse_file_system(startPath, excludedFolderPath):
     #traverse the whole file system from the start point, except the excludedFolderPath
+    # when we enter a folder call putAllHeaderInTmp
     # if file is .c call generateHeaderFromC.py
     # if file is .cpp call generateHeaderFromCpp.py
 
