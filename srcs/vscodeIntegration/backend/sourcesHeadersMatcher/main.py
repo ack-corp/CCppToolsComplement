@@ -4,6 +4,7 @@ from pathlib import Path
 
 from generateHeader import generateHeader
 from putAllHeaderInTmp import putAllHeaderInTmp
+from render import renderHeaders
 from resolveProto import resolveProto
 
 
@@ -86,7 +87,10 @@ def main():
 
     startPath = args.startPath
     excludedFolderPath = args.excludedFolderPath
-    return traverse_file_system(startPath, excludedFolderPath)
+    traversal_result = traverse_file_system(startPath, excludedFolderPath)
+    generated_headers = traversal_result["generatedHeaders"]
+    rendered_headers = renderHeaders(generated_headers)
+    print(rendered_headers)
 
 
 if __name__ == "__main__":
