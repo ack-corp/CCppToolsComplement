@@ -1,10 +1,11 @@
 import argparse
-from pathlib import Path
 import os
+from pathlib import Path
 
 from generateHeaderFromC import generateHeaderFromC
 from generateHeaderFromCpp import generateHeaderFromCPP
 from putAllHeaderInTmp import putAllHeaderInTmp
+from resolveProto import resolveProto
 
 
 C_SOURCE_EXTENSIONS = {".c"}
@@ -40,6 +41,7 @@ def _is_excluded(path, excluded_paths):
 def traverse_file_system(startPath, excludedFolderPath):
     start_path = Path(startPath).expanduser().resolve()
     excluded_paths = _normalize_excluded_paths(excludedFolderPath)
+    proto = resolveProto(startPath, C_SOURCE_EXTENSIONS | CPP_SOURCE_EXTENSIONS, excludedFolderPath)
 
     for current_root, dir_names, file_names in os.walk(start_path):
         current_path = Path(current_root).resolve()
@@ -60,7 +62,7 @@ def traverse_file_system(startPath, excludedFolderPath):
             suffix = file_path.suffix.lower()
 
             if suffix in C_SOURCE_EXTENSIONS:
-                generateHeaderFromC(str(file_path))
+                generateHeaderFromC(str(file_path), proto)
             elif suffix in CPP_SOURCE_EXTENSIONS:
                 generateHeaderFromCPP(str(file_path))
 
