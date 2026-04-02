@@ -161,8 +161,32 @@ def remove_struct_declarations_from_sources(startPath, extensions, excludedFolde
             _write_file(file_path, updated_text)
 
 
+def remove_macro_definitions_from_sources(startPath, extensions, excludedFolderPath=None):
+    start_path = Path(startPath).expanduser().resolve()
+    normalized_extensions = _normalize_extensions(extensions)
+    excluded_paths = _normalize_excluded_paths(excludedFolderPath or [])
+
+    for file_path in start_path.rglob("*"):
+        if not file_path.is_file():
+            continue
+        if _is_excluded(file_path, excluded_paths):
+            continue
+        if normalized_extensions and file_path.suffix.lower() not in normalized_extensions:
+            continue
+
+        file_text = _read_file(file_path)
+        macro_statements = get_macro_proto(file_text)
+        if not macro_statements:
+            continue
+
+        updated_text = _remove_statements_from_text(file_text, macro_statements)
+        if updated_text != file_text:
+            _write_file(file_path, updated_text)
+
+
 def cleanup_sources(startPath, extensions, excludedFolderPath=None):
     remove_function_proto_from_sources(startPath, extensions, excludedFolderPath)
+    remove_macro_definitions_from_sources(startPath, extensions, excludedFolderPath)
     remove_struct_declarations_from_sources(startPath, extensions, excludedFolderPath)
     _delete_empty_source_files(startPath, extensions, excludedFolderPath)
 

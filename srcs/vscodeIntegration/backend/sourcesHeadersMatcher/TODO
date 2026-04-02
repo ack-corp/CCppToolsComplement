@@ -1,4 +1,4 @@
-1 - manage include of headers
+1 - order the declaration, normalize space, carriage return.
 2 - manage them who have implemented function in headers
 
 i suppose we should declare
