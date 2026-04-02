@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from getSourceProto import (
     get_c_function_proto,
     get_cpp_class_proto,
@@ -11,14 +13,6 @@ from getSourceProto import (
 PROTO_GROUP_ORDER = ("class", "function", "macro", "struct", "typedef")
 
 
-def _get_entry_text(entry):
-    if isinstance(entry, dict):
-        return entry.get("implementation", "")
-    if isinstance(entry, str):
-        return entry
-    return ""
-
-
 def _append_unique(target_list, seen_values, value):
     if not value or value in seen_values:
         return
@@ -26,39 +20,56 @@ def _append_unique(target_list, seen_values, value):
     target_list.append(value)
 
 
-def _extract_grouped_proto(proto_text):
-    struct_matches = get_struct_proto(proto_text)
-    if struct_matches:
-        return (("struct", struct_matches),)
-
-    class_matches = get_cpp_class_proto(proto_text)
-    if class_matches:
-        return (("class", class_matches),)
-
-    function_matches = get_c_function_proto(proto_text) + get_cpp_function_proto(proto_text)
-    if function_matches:
-        return (("function", function_matches),)
-
-    macro_matches = get_macro_proto(proto_text)
-    if macro_matches:
-        return (("macro", macro_matches),)
-
-    typedef_matches = get_typedef_proto(proto_text)
-    if typedef_matches:
-        return (("typedef", typedef_matches),)
-
-    return ()
+def _normalize_extensions(extensions):
+    normalized_extensions = set()
+    for extension in extensions:
+        if not extension:
+            continue
+        normalized_extension = extension.lower()
+        if not normalized_extension.startswith("."):
+            normalized_extension = f".{normalized_extension}"
+        normalized_extensions.add(normalized_extension)
+    return normalized_extensions
 
 
-def resolveProto(protoMap):
+def _read_file(file_path):
+    return Path(file_path).read_text(encoding="utf-8", errors="ignore")
+
+
+def _collect_from_text(file_text):
+    struct_proto = get_struct_proto(file_text)
+    class_proto = [proto for proto in get_cpp_class_proto(file_text) if proto not in struct_proto]
+    function_proto = list(dict.fromkeys(get_c_function_proto(file_text) + get_cpp_function_proto(file_text)))
+    macro_proto = get_macro_proto(file_text)
+    typedef_proto = get_typedef_proto(file_text)
+
+    return {
+        "class": class_proto,
+        "function": function_proto,
+        "macro": macro_proto,
+        "struct": struct_proto,
+        "typedef": typedef_proto,
+    }
+
+
+def resolveProto(startPath, extensions):
+    start_path = Path(startPath).expanduser().resolve()
+    normalized_extensions = _normalize_extensions(extensions)
+
     grouped_proto = {proto_type: [] for proto_type in PROTO_GROUP_ORDER}
     seen_group_values = {proto_type: set() for proto_type in PROTO_GROUP_ORDER}
 
-    for entries in protoMap.values():
-        for entry in entries:
-            proto_text = _get_entry_text(entry).strip()
-            for proto_type, matches in _extract_grouped_proto(proto_text):
-                for match in matches:
-                    _append_unique(grouped_proto[proto_type], seen_group_values[proto_type], match)
+    for file_path in start_path.rglob("*"):
+        if not file_path.is_file():
+            continue
+        if normalized_extensions and file_path.suffix.lower() not in normalized_extensions:
+            continue
+
+        file_text = _read_file(file_path)
+        file_grouped_proto = _collect_from_text(file_text)
+
+        for proto_type in PROTO_GROUP_ORDER:
+            for proto in file_grouped_proto[proto_type]:
+                _append_unique(grouped_proto[proto_type], seen_group_values[proto_type], proto)
 
     return [grouped_proto[proto_type] for proto_type in PROTO_GROUP_ORDER]
