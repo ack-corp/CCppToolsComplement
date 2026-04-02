@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+void log_result(int value);
 
 void log_result(int value)
 {

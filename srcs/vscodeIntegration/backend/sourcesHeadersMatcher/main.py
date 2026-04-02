@@ -46,6 +46,30 @@ def _merge_header_map(global_header_map, file_header_map):
         global_header_map.setdefault(proto_name, []).extend(entries)
 
 
+def _collect_source_texts(start_path, excluded_paths, source_extensions):
+    source_texts = {}
+
+    for current_root, dir_names, file_names in os.walk(start_path):
+        current_path = Path(current_root).resolve()
+        if _is_excluded(current_path, excluded_paths):
+            dir_names[:] = []
+            continue
+
+        dir_names[:] = [
+            dir_name
+            for dir_name in dir_names
+            if not _is_excluded(current_path / dir_name, excluded_paths)
+        ]
+
+        for file_name in file_names:
+            file_path = current_path / file_name
+            if file_path.suffix.lower() not in source_extensions:
+                continue
+            source_texts[str(file_path.resolve())] = file_path.read_text(encoding="utf-8", errors="ignore")
+
+    return source_texts
+
+
 def _format_rendered_headers(rendered_headers):
     if not rendered_headers:
         return "No headers generated."
@@ -65,6 +89,7 @@ def traverse_file_system(startPath, excludedFolderPath):
     excluded_paths = _normalize_excluded_paths(excludedFolderPath)
     source_extensions = C_SOURCE_EXTENSIONS | CPP_SOURCE_EXTENSIONS
     proto = resolveProto(startPath, source_extensions, excludedFolderPath)
+    source_texts_by_path = _collect_source_texts(start_path, excluded_paths, source_extensions)
     generated_headers = {}
 
     for current_root, dir_names, file_names in os.walk(start_path):
@@ -86,7 +111,7 @@ def traverse_file_system(startPath, excludedFolderPath):
             suffix = file_path.suffix.lower()
 
             if suffix in source_extensions:
-                file_header_map = generateHeader(str(file_path), proto)
+                file_header_map = generateHeader(str(file_path), proto, source_texts_by_path)
                 _merge_header_map(generated_headers, file_header_map)
 
     return {

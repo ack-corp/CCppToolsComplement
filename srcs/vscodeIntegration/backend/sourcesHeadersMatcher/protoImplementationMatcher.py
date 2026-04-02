@@ -39,17 +39,39 @@ def _extract_typedef_name(statement):
     return _extract_name(statement, TYPEDEF_NAME_RE)
 
 
-def _count_recurence(file_text, symbol_name):
+def _count_symbol_usage(file_text, symbol_name):
     if not symbol_name:
         return 0
-    return max(len(re.findall(rf"\b{re.escape(symbol_name)}\b", file_text)) - 1, 0)
+    return len(re.findall(rf"\b{re.escape(symbol_name)}\b", file_text))
 
 
-def _build_recurence(file_path, file_text, symbol_name):
+def _build_recurence(file_path, file_text, symbol_name, source_texts_by_path):
+    recurence = []
+    all_source_texts = dict(source_texts_by_path)
+    all_source_texts.setdefault(str(file_path), file_text)
+    implementation_source = str(file_path)
+
+    for source_path, source_text in all_source_texts.items():
+        times = _count_symbol_usage(source_text, symbol_name)
+        if str(source_path) == implementation_source:
+            times = max(times - 1, 0)
+        if times <= 0:
+            continue
+
+        recurence.append(
+            {
+                "source": str(source_path),
+                "times": times,
+            }
+        )
+
+    if recurence:
+        return recurence
+
     return [
         {
             "source": str(file_path),
-            "times": _count_recurence(file_text, symbol_name),
+            "times": max(_count_symbol_usage(file_text, symbol_name) - 1, 0),
         }
     ]
 
@@ -122,9 +144,10 @@ def extract_file_statements(file_text):
     }
 
 
-def build_proto_map(file_path, proto_groups, file_text):
+def build_proto_map(file_path, proto_groups, file_text, source_texts_by_path=None):
     extracted_file_statements = extract_file_statements(file_text)
     result_map = {}
+    source_texts_by_path = source_texts_by_path or {}
 
     for proto_type, proto_index in PROTO_TYPE_INDEX.items():
         for proto in proto_groups[proto_index]:
@@ -146,7 +169,7 @@ def build_proto_map(file_path, proto_groups, file_text):
             entry = {
                 "implementation": implementation,
                 "source": str(file_path),
-                "recurence": _build_recurence(file_path, file_text, symbol_name),
+                "recurence": _build_recurence(file_path, file_text, symbol_name, source_texts_by_path),
             }
             result_map.setdefault(proto, []).append(entry)
 
