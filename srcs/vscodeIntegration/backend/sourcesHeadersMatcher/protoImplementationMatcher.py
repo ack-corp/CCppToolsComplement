@@ -21,7 +21,7 @@ FUNCTION_NAME_RE = re.compile(r"([A-Za-z_]\w*)\s*\(")
 MACRO_NAME_RE = re.compile(r"#\s*define\s+([A-Za-z_]\w*)")
 CLASS_NAME_RE = re.compile(r"\bclass\s+([A-Za-z_]\w*)")
 STRUCT_NAME_RE = re.compile(r"\bstruct\s+([A-Za-z_]\w*)")
-TYPEDEF_NAME_RE = re.compile(r"\btypedef\b.*?\b([A-Za-z_]\w*)\s*;")
+TYPEDEF_NAME_RE = re.compile(r"\btypedef\b[\s\S]*?\b([A-Za-z_]\w*)\s*;")
 USING_NAME_RE = re.compile(r"\busing\s+([A-Za-z_]\w*)\s*=")
 
 

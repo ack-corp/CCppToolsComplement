@@ -5,7 +5,10 @@ from pathlib import Path
 from generateHeader import generateHeader
 from putAllHeaderInTmp import putAllHeaderInTmp
 from render import renderHeaders
-from resolveProto import resolveProto
+from resolveProto import (
+    cleanup_sources,
+    resolveProto,
+)
 
 
 C_SOURCE_EXTENSIONS = {".c"}
@@ -104,6 +107,8 @@ def main():
     traversal_result = traverse_file_system(startPath, excludedFolderPath)
     generated_headers = traversal_result["generatedHeaders"]
     rendered_headers = renderHeaders(generated_headers)
+    source_extensions = C_SOURCE_EXTENSIONS | CPP_SOURCE_EXTENSIONS
+    cleanup_sources(startPath, source_extensions, excludedFolderPath)
     print(_format_rendered_headers(rendered_headers))
 
 
