@@ -1,7 +1,19 @@
 #define FEATURE_NAME "sourcesHeadersMatcher fixture"
 
+typedef struct runtime_flag {
+    const char *label;
+    int is_active;
+} runtime_flag_t;
+typedef runtime_flag_t runtime_flag_alias_t;
 
+struct feature_toggle;
+struct feature_shadow;
+const char *feature_name(void);
 
+struct feature_toggle {
+    const char *name;
+    int enabled;
+};
 
 const char *feature_name(void)
 {
