@@ -9,10 +9,10 @@ from getSourceProto import (
     get_struct_proto,
     get_typedef_proto,
 )
-from utils import _is_excluded, _normalize_excluded_paths, _read_file
+from utils import is_excluded, normalize_excluded_paths, read_file
 
 
-def _collect_from_text(file_text: str) -> ResolvedProto:
+def collect_from_text(file_text: str) -> ResolvedProto:
     struct_proto = get_struct_proto(file_text)
     class_proto = [proto for proto in get_cpp_class_proto(file_text) if proto not in struct_proto]
     function_proto = list(dict.fromkeys(get_c_function_proto(file_text) + get_cpp_function_proto(file_text)))
@@ -27,13 +27,13 @@ def _collect_from_text(file_text: str) -> ResolvedProto:
     )
 
 
-def resolveProto(startPath: str, extensions: set[str], excludedFolderPath: list[str] | None = None) -> ResolvedProto:
+def getResolvedProto(startPath: str, extensions: set[str], excludedFolderPath: list[str] | None = None) -> ResolvedProto:
     start_path = Path(startPath).expanduser().resolve()
-    excluded_paths = _normalize_excluded_paths(excludedFolderPath or [])
+    excluded_paths = normalize_excluded_paths(excludedFolderPath or [])
     grouped_proto = ResolvedProto()
     for file_path in start_path.rglob("*"):
-        if file_path.is_file() and not _is_excluded(file_path, excluded_paths) and extensions and file_path.suffix.lower() in extensions:
-            file_text = _read_file(file_path)
-            file_grouped_proto = _collect_from_text(file_text)
+        if file_path.is_file() and not is_excluded(file_path, excluded_paths) and extensions and file_path.suffix.lower() in extensions:
+            file_text = read_file(file_path)
+            file_grouped_proto = collect_from_text(file_text)
             grouped_proto.add_unique(file_grouped_proto)
     return grouped_proto

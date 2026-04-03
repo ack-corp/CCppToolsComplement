@@ -4,9 +4,7 @@ from pathlib import Path
 import shutil
 import tempfile
 
-
-HEADER_EXTENSIONS = {".h", ".hpp"}
-TMP_HEADERS_ROOT_NAME = "CCppToolsComplementHeaderGarden"
+from globals import HEADER_EXTENSIONS, TMP_HEADERS_ROOT_NAME
 
 
 def _resolve_scan_path(folder_path: str | Path | None) -> Path:
@@ -20,22 +18,13 @@ def _build_tmp_folder(scan_path: Path, tmp_root: str | Path) -> Path:
 
 
 def putAllHeaderInTmp(folder_path: str | Path = ".", tmp_root: str | Path | None = None) -> str:
-    """
-    Copy every header from ``folder_path`` into a dedicated temp subfolder.
-
-    Returns the created temp folder path as a string.
-    """
-
     scan_path = _resolve_scan_path(folder_path)
     if not scan_path.is_dir():
         raise NotADirectoryError(f"Cannot collect headers from '{scan_path}'.")
-
     tmp_headers_folder = _build_tmp_folder(scan_path, tmp_root or tempfile.gettempdir())
     tmp_headers_folder.mkdir(parents=True, exist_ok=True)
-
     for entry in scan_path.iterdir():
         if not entry.is_file() or entry.suffix.lower() not in HEADER_EXTENSIONS:
             continue
         shutil.copy2(entry, tmp_headers_folder / entry.name)
-
     return str(tmp_headers_folder)

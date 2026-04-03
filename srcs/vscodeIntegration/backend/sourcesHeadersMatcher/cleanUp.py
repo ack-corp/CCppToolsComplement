@@ -10,7 +10,7 @@ from getSourceProto import (
     get_struct_imp,
     get_typedef_proto,
 )
-from utils import _is_excluded, _normalize_excluded_paths, _read_file, _write_file
+from utils import is_excluded, normalize_excluded_paths, read_file, write_file
 
 
 def _delete_file(file_path: Path) -> None:
@@ -19,17 +19,17 @@ def _delete_file(file_path: Path) -> None:
 
 def _delete_empty_source_files(startPath: str, extensions: set[str], excludedFolderPath: list[str] | None = None) -> None:
     start_path = Path(startPath).expanduser().resolve()
-    excluded_paths = _normalize_excluded_paths(excludedFolderPath or [])
+    excluded_paths = normalize_excluded_paths(excludedFolderPath or [])
 
     for file_path in start_path.rglob("*"):
         if not file_path.is_file():
             continue
-        if _is_excluded(file_path, excluded_paths):
+        if is_excluded(file_path, excluded_paths):
             continue
         if extensions and file_path.suffix.lower() not in extensions:
             continue
 
-        file_text = _read_file(file_path)
+        file_text = read_file(file_path)
         if file_text.strip():
             continue
 
@@ -53,39 +53,39 @@ def _remove_statements_from_text(file_text: str, statements: list[str]) -> str:
 
 def remove_function_proto_from_sources(startPath: str, extensions: set[str], excludedFolderPath: list[str] | None = None) -> None:
     start_path = Path(startPath).expanduser().resolve()
-    excluded_paths = _normalize_excluded_paths(excludedFolderPath or [])
+    excluded_paths = normalize_excluded_paths(excludedFolderPath or [])
 
     for file_path in start_path.rglob("*"):
         if not file_path.is_file():
             continue
-        if _is_excluded(file_path, excluded_paths):
+        if is_excluded(file_path, excluded_paths):
             continue
         if extensions and file_path.suffix.lower() not in extensions:
             continue
 
-        file_text = _read_file(file_path)
+        file_text = read_file(file_path)
         function_proto = list(dict.fromkeys(get_c_function_proto(file_text) + get_cpp_function_proto(file_text)))
         if not function_proto:
             continue
 
         updated_text = _remove_statements_from_text(file_text, function_proto)
         if updated_text != file_text:
-            _write_file(file_path, updated_text)
+            write_file(file_path, updated_text)
 
 
 def remove_struct_declarations_from_sources(startPath: str, extensions: set[str], excludedFolderPath: list[str] | None = None) -> None:
     start_path = Path(startPath).expanduser().resolve()
-    excluded_paths = _normalize_excluded_paths(excludedFolderPath or [])
+    excluded_paths = normalize_excluded_paths(excludedFolderPath or [])
 
     for file_path in start_path.rglob("*"):
         if not file_path.is_file():
             continue
-        if _is_excluded(file_path, excluded_paths):
+        if is_excluded(file_path, excluded_paths):
             continue
         if extensions and file_path.suffix.lower() not in extensions:
             continue
 
-        file_text = _read_file(file_path)
+        file_text = read_file(file_path)
         struct_statements = list(
             dict.fromkeys(
                 get_struct_forward_decl(file_text)
@@ -99,29 +99,29 @@ def remove_struct_declarations_from_sources(startPath: str, extensions: set[str]
 
         updated_text = _remove_statements_from_text(file_text, statements_to_remove)
         if updated_text != file_text:
-            _write_file(file_path, updated_text)
+            write_file(file_path, updated_text)
 
 
 def remove_macro_definitions_from_sources(startPath: str, extensions: set[str], excludedFolderPath: list[str] | None = None) -> None:
     start_path = Path(startPath).expanduser().resolve()
-    excluded_paths = _normalize_excluded_paths(excludedFolderPath or [])
+    excluded_paths = normalize_excluded_paths(excludedFolderPath or [])
 
     for file_path in start_path.rglob("*"):
         if not file_path.is_file():
             continue
-        if _is_excluded(file_path, excluded_paths):
+        if is_excluded(file_path, excluded_paths):
             continue
         if extensions and file_path.suffix.lower() not in extensions:
             continue
 
-        file_text = _read_file(file_path)
+        file_text = read_file(file_path)
         macro_statements = get_macro_proto(file_text)
         if not macro_statements:
             continue
 
         updated_text = _remove_statements_from_text(file_text, macro_statements)
         if updated_text != file_text:
-            _write_file(file_path, updated_text)
+            write_file(file_path, updated_text)
 
 
 def cleanup_sources(startPath: str, extensions: set[str], excludedFolderPath: list[str] | None = None) -> None:
