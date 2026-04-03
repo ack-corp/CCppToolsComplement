@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import argparse
 import os
 from pathlib import Path
 
+from Classes.traversal_result import TraversalResult
+from Classes.type_aliases import GeneratedHeaders, SourceTextsByPath
 from generateHeader import generateHeader
 from printer import format_stringified_headers
 from resolveProto import resolveProto
@@ -10,41 +14,27 @@ from stringify import stringify_headers
 
 C_SOURCE_EXTENSIONS = {".c"}
 CPP_SOURCE_EXTENSIONS = {".cc", ".cpp"}
-# To avoid recursive include
-# if limit = 1
-# If # myMap["MY_MACRO"] = {"MY_MACRO 10", "file/path1.c", 1} put it in file/path1.c
-# If # myMap["MY_MACRO"] = {"MY_MACRO 10", "file/path1.c", 0} put it in its own header
-# more complexe if limit = 0
-# If # myMap["MY_MACRO"] = {"MY_MACRO 10", "file/path1.c", 2}
-# If # myMap["MY_MACRO"] = {"MY_MACRO 10", "file/path2.c", 1}
-# If # myMap["MY_MACRO"] = {"MY_MACRO2 10", "file/path1.c", 2}
-# If # myMap["MY_MACRO"] = {"MY_MACRO2 10", "file/path2.c", 1}
-# Put MY_MACRO MY_MACRO2 in the same header as the have the same shared folder using them
-
-# Other possibilities :
-#  Do a compiler that manage recursive include...
-#  Let IA manage this part
 RECURENCE_LIMIT = 0
 
 
-def _normalize_excluded_paths(excluded_folder_paths):
+def _normalize_excluded_paths(excluded_folder_paths: list[str]) -> set[Path]:
     return {
         Path(folder_path).expanduser().resolve()
         for folder_path in excluded_folder_paths
     }
 
 
-def _is_excluded(path, excluded_paths):
+def _is_excluded(path: Path, excluded_paths: set[Path]) -> bool:
     return any(path == excluded_path or excluded_path in path.parents for excluded_path in excluded_paths)
 
 
-def _merge_header_map(global_header_map, file_header_map):
+def _merge_header_map(global_header_map: GeneratedHeaders, file_header_map: GeneratedHeaders) -> None:
     for proto_name, entries in file_header_map.items():
         global_header_map.setdefault(proto_name, []).extend(entries)
 
 
-def _collect_source_texts(start_path, excluded_paths, source_extensions):
-    source_texts = {}
+def _collect_source_texts(start_path: Path, excluded_paths: set[Path], source_extensions: set[str]) -> SourceTextsByPath:
+    source_texts: SourceTextsByPath = {}
 
     for current_root, dir_names, file_names in os.walk(start_path):
         current_path = Path(current_root).resolve()
@@ -67,13 +57,13 @@ def _collect_source_texts(start_path, excluded_paths, source_extensions):
     return source_texts
 
 
-def traverse_file_system(startPath, excludedFolderPath):
+def traverse_file_system(startPath: str, excludedFolderPath: list[str]) -> TraversalResult:
     start_path = Path(startPath).expanduser().resolve()
     excluded_paths = _normalize_excluded_paths(excludedFolderPath)
     source_extensions = C_SOURCE_EXTENSIONS | CPP_SOURCE_EXTENSIONS
     proto = resolveProto(startPath, source_extensions, excludedFolderPath)
     source_texts_by_path = _collect_source_texts(start_path, excluded_paths, source_extensions)
-    generated_headers = {}
+    generated_headers: GeneratedHeaders = {}
 
     for current_root, dir_names, file_names in os.walk(start_path):
         current_path = Path(current_root).resolve()
@@ -95,14 +85,10 @@ def traverse_file_system(startPath, excludedFolderPath):
                 file_header_map = generateHeader(str(file_path), proto, source_texts_by_path)
                 _merge_header_map(generated_headers, file_header_map)
 
-    return {
-        "proto": proto,
-        "generatedHeaders": generated_headers,
-    }
+    return TraversalResult(proto=proto, generated_headers=generated_headers)
 
 
-# it get the path where it should start the traversing + a list of excluded folder
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("startPath")
     parser.add_argument("excludedFolderPath", nargs="*")
@@ -111,7 +97,7 @@ def main():
     startPath = args.startPath
     excludedFolderPath = args.excludedFolderPath
     traversal_result = traverse_file_system(startPath, excludedFolderPath)
-    generated_headers = traversal_result["generatedHeaders"]
+    generated_headers = traversal_result.generated_headers
     stringified_headers = stringify_headers(generated_headers)
     print(format_stringified_headers(stringified_headers))
 

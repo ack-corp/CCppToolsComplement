@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 import shutil
 import tempfile
@@ -7,17 +9,17 @@ HEADER_EXTENSIONS = {".h", ".hpp"}
 TMP_HEADERS_ROOT_NAME = "CCppToolsComplementHeaderGarden"
 
 
-def _resolve_scan_path(folder_path):
+def _resolve_scan_path(folder_path: str | Path | None) -> Path:
     return Path(folder_path or ".").expanduser().resolve()
 
 
-def _build_tmp_folder(scan_path, tmp_root):
+def _build_tmp_folder(scan_path: Path, tmp_root: str | Path) -> Path:
     safe_anchor = scan_path.anchor.replace(":", "").replace("/", "") or "root"
     relative_scan_path = scan_path.relative_to(scan_path.anchor)
     return Path(tmp_root) / TMP_HEADERS_ROOT_NAME / safe_anchor / relative_scan_path
 
 
-def putAllHeaderInTmp(folder_path=".", tmp_root=None):
+def putAllHeaderInTmp(folder_path: str | Path = ".", tmp_root: str | Path | None = None) -> str:
     """
     Copy every header from ``folder_path`` into a dedicated temp subfolder.
 

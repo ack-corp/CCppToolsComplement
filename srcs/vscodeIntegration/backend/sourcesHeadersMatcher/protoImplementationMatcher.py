@@ -1,3 +1,13 @@
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+from Classes.extracted_file_statements import ExtractedFileStatements
+from Classes.proto_match import ProtoMatch
+from Classes.recurrence import Recurrence
+from Classes.resolved_proto import ResolvedProto
+from Classes.type_aliases import GeneratedHeaders, SourceTextsByPath
 from getSourceProto import (
     get_c_function_proto,
     get_c_function_imp,
@@ -9,7 +19,6 @@ from getSourceProto import (
     get_struct_proto,
     get_typedef_proto,
 )
-import re
 
 
 PROTO_TYPE_INDEX = {
@@ -28,27 +37,27 @@ TYPEDEF_NAME_RE = re.compile(r"\btypedef\b[\s\S]*?\b([A-Za-z_]\w*)\s*;")
 USING_NAME_RE = re.compile(r"\busing\s+([A-Za-z_]\w*)\s*=")
 
 
-def _extract_name(statement, pattern):
+def _extract_name(statement: str, pattern: re.Pattern[str]) -> str | None:
     match = pattern.search(statement)
     if match is None:
         return None
     return match.group(1)
 
 
-def _extract_typedef_name(statement):
+def _extract_typedef_name(statement: str) -> str | None:
     using_name = _extract_name(statement, USING_NAME_RE)
     if using_name is not None:
         return using_name
     return _extract_name(statement, TYPEDEF_NAME_RE)
 
 
-def _count_symbol_usage(file_text, symbol_name):
+def _count_symbol_usage(file_text: str, symbol_name: str | None) -> int:
     if not symbol_name:
         return 0
     return len(re.findall(rf"\b{re.escape(symbol_name)}\b", file_text))
 
 
-def _remove_statements_from_text(file_text, statements):
+def _remove_statements_from_text(file_text: str, statements: list[str]) -> str:
     updated_text = file_text
     for statement in statements:
         if not statement:
@@ -57,7 +66,7 @@ def _remove_statements_from_text(file_text, statements):
     return updated_text
 
 
-def _strip_non_usage_statements(file_text):
+def _strip_non_usage_statements(file_text: str) -> str:
     non_usage_statements = list(
         dict.fromkeys(
             get_c_function_proto(file_text)
@@ -72,8 +81,13 @@ def _strip_non_usage_statements(file_text):
     return _remove_statements_from_text(file_text, non_usage_statements)
 
 
-def _build_recurence(file_path, file_text, symbol_name, source_texts_by_path):
-    recurence = []
+def _build_recurence(
+    file_path: Path,
+    file_text: str,
+    symbol_name: str | None,
+    source_texts_by_path: SourceTextsByPath,
+) -> list[Recurrence]:
+    recurence: list[Recurrence] = []
     all_source_texts = dict(source_texts_by_path)
     all_source_texts.setdefault(str(file_path), file_text)
     implementation_source = str(file_path)
@@ -86,25 +100,15 @@ def _build_recurence(file_path, file_text, symbol_name, source_texts_by_path):
         if times <= 0:
             continue
 
-        recurence.append(
-            {
-                "source": str(source_path),
-                "times": times,
-            }
-        )
+        recurence.append(Recurrence(source=str(source_path), times=times))
 
     if recurence:
         return recurence
 
-    return [
-        {
-            "source": str(file_path),
-            "times": _count_symbol_usage(_strip_non_usage_statements(file_text), symbol_name),
-        }
-    ]
+    return [Recurrence(source=str(file_path), times=_count_symbol_usage(_strip_non_usage_statements(file_text), symbol_name))]
 
 
-def _find_matching_function_imp(proto, function_imps):
+def _find_matching_function_imp(proto: str, function_imps: list[str]) -> str | None:
     proto_name = _extract_name(proto, FUNCTION_NAME_RE)
     if proto_name is None:
         return None
@@ -115,7 +119,7 @@ def _find_matching_function_imp(proto, function_imps):
     return None
 
 
-def _find_matching_struct(proto, struct_statements):
+def _find_matching_struct(proto: str, struct_statements: list[str]) -> str | None:
     proto_name = _extract_name(proto, STRUCT_NAME_RE)
     if proto_name is None:
         return None
@@ -126,7 +130,7 @@ def _find_matching_struct(proto, struct_statements):
     return None
 
 
-def _find_matching_class(proto, class_statements):
+def _find_matching_class(proto: str, class_statements: list[str]) -> str | None:
     proto_name = _extract_name(proto, CLASS_NAME_RE)
     if proto_name is None:
         return None
@@ -137,7 +141,7 @@ def _find_matching_class(proto, class_statements):
     return None
 
 
-def _find_matching_typedef(proto, typedef_statements):
+def _find_matching_typedef(proto: str, typedef_statements: list[str]) -> str | None:
     proto_name = _extract_typedef_name(proto)
     if proto_name is None:
         return None
@@ -148,38 +152,44 @@ def _find_matching_typedef(proto, typedef_statements):
     return None
 
 
-def _match_proto(proto_type, proto, file_text, extracted_file_statements):
+def _match_proto(proto_type: str, proto: str, extracted_file_statements: ExtractedFileStatements) -> str | None:
     if proto_type == "class":
-        return _find_matching_class(proto, extracted_file_statements["class"])
+        return _find_matching_class(proto, extracted_file_statements.classes)
     if proto_type == "function":
-        return _find_matching_function_imp(proto, extracted_file_statements["function_imp"])
+        return _find_matching_function_imp(proto, extracted_file_statements.function_implementations)
     if proto_type == "macro":
-        return proto if proto in extracted_file_statements["macro"] else None
+        return proto if proto in extracted_file_statements.macros else None
     if proto_type == "struct":
-        return _find_matching_struct(proto, extracted_file_statements["struct"])
+        return _find_matching_struct(proto, extracted_file_statements.structs)
     if proto_type == "typedef":
-        return _find_matching_typedef(proto, extracted_file_statements["typedef"])
+        return _find_matching_typedef(proto, extracted_file_statements.typedefs)
     return None
 
 
-def extract_file_statements(file_text):
-    return {
-        "class": get_cpp_class_imp(file_text),
-        "function_imp": get_c_function_imp(file_text),
-        "macro": get_macro_proto(file_text),
-        "struct": list(dict.fromkeys(get_struct_proto(file_text) + get_struct_imp(file_text))),
-        "typedef": get_typedef_proto(file_text),
-    }
+def extract_file_statements(file_text: str) -> ExtractedFileStatements:
+    return ExtractedFileStatements(
+        classes=get_cpp_class_imp(file_text),
+        function_implementations=get_c_function_imp(file_text),
+        macros=get_macro_proto(file_text),
+        structs=list(dict.fromkeys(get_struct_proto(file_text) + get_struct_imp(file_text))),
+        typedefs=get_typedef_proto(file_text),
+    )
 
 
-def build_proto_map(file_path, proto_groups, file_text, source_texts_by_path=None):
+def build_proto_map(
+    file_path: Path,
+    proto_groups: ResolvedProto,
+    file_text: str,
+    source_texts_by_path: SourceTextsByPath | None = None,
+) -> GeneratedHeaders:
     extracted_file_statements = extract_file_statements(file_text)
-    result_map = {}
+    result_map: GeneratedHeaders = {}
     source_texts_by_path = source_texts_by_path or {}
 
     for proto_type, proto_index in PROTO_TYPE_INDEX.items():
-        for proto in proto_groups[proto_index]:
-            implementation = _match_proto(proto_type, proto, file_text, extracted_file_statements)
+        del proto_index
+        for proto in proto_groups.get_by_type(proto_type):
+            implementation = _match_proto(proto_type, proto, extracted_file_statements)
             if implementation is None:
                 continue
 
@@ -194,11 +204,11 @@ def build_proto_map(file_path, proto_groups, file_text, source_texts_by_path=Non
             else:
                 symbol_name = _extract_typedef_name(proto)
 
-            entry = {
-                "implementation": implementation,
-                "source": str(file_path),
-                "recurence": _build_recurence(file_path, file_text, symbol_name, source_texts_by_path),
-            }
+            entry = ProtoMatch(
+                implementation=implementation,
+                source=str(file_path),
+                recurence=_build_recurence(file_path, file_text, symbol_name, source_texts_by_path),
+            )
             result_map.setdefault(proto, []).append(entry)
 
     return result_map
