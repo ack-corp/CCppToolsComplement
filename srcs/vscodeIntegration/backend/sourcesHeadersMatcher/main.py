@@ -3,12 +3,9 @@ import os
 from pathlib import Path
 
 from generateHeader import generateHeader
-from putAllHeaderInTmp import putAllHeaderInTmp
-from render import renderHeaders
-from resolveProto import (
-    cleanup_sources,
-    resolveProto,
-)
+from printer import format_stringified_headers
+from resolveProto import resolveProto
+from stringify import stringify_headers
 
 
 C_SOURCE_EXTENSIONS = {".c"}
@@ -70,20 +67,6 @@ def _collect_source_texts(start_path, excluded_paths, source_extensions):
     return source_texts
 
 
-def _format_rendered_headers(rendered_headers):
-    if not rendered_headers:
-        return "No headers generated."
-
-    lines = []
-    for header_path in sorted(rendered_headers):
-        lines.append(f"{header_path}:")
-        for proto in rendered_headers[header_path]:
-            lines.append(f"  - {proto}")
-        lines.append("")
-
-    return "\n".join(lines).rstrip()
-
-
 def traverse_file_system(startPath, excludedFolderPath):
     start_path = Path(startPath).expanduser().resolve()
     excluded_paths = _normalize_excluded_paths(excludedFolderPath)
@@ -103,8 +86,6 @@ def traverse_file_system(startPath, excludedFolderPath):
             for dir_name in dir_names
             if not _is_excluded(current_path / dir_name, excluded_paths)
         ]
-
-        putAllHeaderInTmp(current_path)
 
         for file_name in file_names:
             file_path = current_path / file_name
@@ -131,10 +112,8 @@ def main():
     excludedFolderPath = args.excludedFolderPath
     traversal_result = traverse_file_system(startPath, excludedFolderPath)
     generated_headers = traversal_result["generatedHeaders"]
-    rendered_headers = renderHeaders(generated_headers)
-    source_extensions = C_SOURCE_EXTENSIONS | CPP_SOURCE_EXTENSIONS
-    cleanup_sources(startPath, source_extensions, excludedFolderPath)
-    print(_format_rendered_headers(rendered_headers))
+    stringified_headers = stringify_headers(generated_headers)
+    print(format_stringified_headers(stringified_headers))
 
 
 if __name__ == "__main__":
