@@ -6,8 +6,11 @@ from Classes.type_aliases import GeneratedHeaders, SourceTextsByPath
 from getSourceProto import (
     get_c_function_imp,
     get_c_function_proto,
+    get_cpp_class_proto,
     get_cpp_class_imp,
+    get_cpp_function_imp,
     get_cpp_function_proto,
+    get_macro_proto,
     get_struct_forward_decl,
     get_struct_imp,
     get_typedef_proto,
@@ -32,10 +35,10 @@ def extract_symbol_name(
     return extract_name(statement, fallback_pattern)
 
 
-def _count_symbol_usage(file_text: str, symbol_name: str | None) -> int:
-    if not symbol_name:
+def _count_matches(file_text: str, pattern: re.Pattern[str] | None) -> int:
+    if pattern is None:
         return 0
-    return len(re.findall(rf"\b{re.escape(symbol_name)}\b", file_text))
+    return len(pattern.findall(file_text))
 
 
 def _remove_statements_from_text(file_text: str, statements: list[str]) -> str:
@@ -53,37 +56,52 @@ def _strip_non_usage_statements(file_text: str) -> str:
             get_c_function_proto(file_text)
             + get_cpp_function_proto(file_text)
             + get_c_function_imp(file_text)
+            + get_cpp_function_imp(file_text)
+            + get_cpp_class_proto(file_text)
             + get_struct_forward_decl(file_text)
             + get_struct_imp(file_text)
             + get_typedef_proto(file_text)
             + get_cpp_class_imp(file_text)
+            + get_macro_proto(file_text)
         )
     )
     return _remove_statements_from_text(file_text, non_usage_statements)
 
 
-def build_recurence(
-    symbol_name: str | None,
-    source_texts_by_path: SourceTextsByPath,
-) -> list[Recurrence]:
-    recurence: list[Recurrence] = []
+def _proto_type_and_name(proto: str) -> tuple[str | None, str | None]:
+    for proto_type, _, symbol_pattern, fallback_symbol_pattern in ResolvedProto.iter_proto_groups(ResolvedProto()):
+        symbol_name = extract_symbol_name(proto, symbol_pattern, fallback_symbol_pattern)
+        if symbol_name is not None:
+            return proto_type, symbol_name
+    return None, None
 
+
+def _usage_pattern_for_proto(proto_type: str | None, symbol_name: str | None) -> re.Pattern[str] | None:
+    if not proto_type or not symbol_name:
+        return None
+
+    escaped_symbol_name = re.escape(symbol_name)
+    if proto_type in {"function", "macro"}:
+        return re.compile(rf"\b{escaped_symbol_name}\b\s*(?=\()")
+    return re.compile(rf"\b{escaped_symbol_name}\b")
+
+
+def build_recurence(
+    proto: str,
+    source_texts_by_path: SourceTextsByPath,
+) -> Recurrence:
+    proto_type, symbol_name = _proto_type_and_name(proto)
+    usage_pattern = _usage_pattern_for_proto(proto_type, symbol_name)
+    recurence: Recurrence = {}
     for source_path, source_text in source_texts_by_path.items():
         usage_text = _strip_non_usage_statements(source_text)
-        times = _count_symbol_usage(usage_text, symbol_name)
+        times = _count_matches(usage_text, usage_pattern)
         if times > 0:
-            recurence.append(Recurrence(source=str(source_path), times=times))
+            recurence[str(source_path)] = recurence.get(str(source_path), 0) + times
     return recurence
-
-
-def symbol_name_from_proto(proto: str) -> str | None:
-    for _, _, symbol_pattern, fallback_symbol_pattern in ResolvedProto.iter_proto_groups(ResolvedProto()):
-        symbol_name = extract_symbol_name(proto, symbol_pattern, fallback_symbol_pattern)
-    return symbol_name
 
 
 def setRecurence(generated_headers: GeneratedHeaders, source_texts_by_path: SourceTextsByPath) -> None:
     for proto, entries in generated_headers.items():
-        symbol_name = symbol_name_from_proto(proto)
         for entry in entries:
-            entry.recurence = build_recurence(symbol_name, source_texts_by_path)
+            entry.recurence = build_recurence(proto, source_texts_by_path)

@@ -6,5 +6,5 @@ from Classes.recurrence import Recurrence
 class ProtoMatch:
     implementation: str
     source: str
-    recurence: list[Recurrence]
+    recurence: Recurrence
     header_path: str | None = None

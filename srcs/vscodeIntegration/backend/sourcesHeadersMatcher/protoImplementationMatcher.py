@@ -117,7 +117,7 @@ def build_proto_map(
                 entry = ProtoMatch(
                     implementation=implementation,
                     source=str(file_path),
-                    recurence=0,
+                    recurence=[],
                 )
                 result_map.setdefault(proto, []).append(entry)
     return result_map

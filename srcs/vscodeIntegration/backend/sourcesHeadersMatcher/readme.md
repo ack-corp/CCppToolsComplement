@@ -5,10 +5,8 @@ Field comments for each structure in [Classes](/home/achaisne/Documents/CCppTool
 ## `Recurrence`
 
 ```python
-@dataclass(slots=True)
-class Recurrence:
-    source: str   # Path of the file where the prototype was found or referenced.
-    times: int    # Number of occurrences in that file.
+Recurrence = dict[str, int]
+# Maps one source path to its occurrence count.
 ```
 
 ## `ProtoMatch`
@@ -18,7 +16,7 @@ class Recurrence:
 class ProtoMatch:
     implementation: str          # Full implementation or declaration text linked to the prototype.
     source: str                  # Source file considered the owner of this candidate.
-    recurence: list[Recurrence]  # Per-file recurrence counters for this prototype.
+    recurence: Recurrence        # Per-file recurrence counters for this prototype.
     header_path: str | None      # Header path chosen for emission, or None until assigned.
 ```
 

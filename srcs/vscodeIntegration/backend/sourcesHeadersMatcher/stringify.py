@@ -26,7 +26,7 @@ def _header_path_from_source(source_path: str) -> str:
 
 
 def _entry_recurence_score(entry: ProtoMatch) -> int:
-    return sum(recurence.times for recurence in entry.recurence)
+    return sum(entry.recurence.values())
 
 
 def _proto_type(proto: str) -> str | None:
@@ -117,8 +117,8 @@ def _build_source_include_map(generated_headers: GeneratedHeaders) -> IncludeMap
             resolved_header_path = str(Path(header_path).resolve())
             include_map.setdefault(implementation_source, set()).add(resolved_header_path)
 
-            for recurence in entry.recurence:
-                recurence_source = str(Path(recurence.source).resolve())
+            for recurence_source in entry.recurence:
+                recurence_source = str(Path(recurence_source).resolve())
                 include_map.setdefault(recurence_source, set()).add(resolved_header_path)
 
     return include_map
