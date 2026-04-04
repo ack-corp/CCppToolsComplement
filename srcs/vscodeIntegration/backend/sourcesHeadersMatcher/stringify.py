@@ -5,13 +5,6 @@ from pathlib import Path
 from Classes.proto_match import ProtoMatch
 from Classes.render_job import RenderJob
 from Classes.type_aliases import GeneratedHeaders, HeaderMap, IncludeMap
-from getSourceProto import (
-    get_c_function_proto,
-    get_cpp_class_proto,
-    get_macro_proto,
-    get_struct_proto,
-    get_typedef_proto,
-)
 
 
 def _append_unique(target_list: list[str], seen_values: set[str], value: str) -> None:
@@ -29,22 +22,10 @@ def _entry_recurence_score(entry: ProtoMatch) -> int:
     return sum(entry.recurence.values())
 
 
-def _proto_type(proto: str) -> str | None:
-    if get_macro_proto(proto):
-        return "macro"
-    if get_struct_proto(proto):
-        return "struct"
-    if get_cpp_class_proto(proto):
-        return "class"
-    if get_typedef_proto(proto):
-        return "typedef"
-    if get_c_function_proto(proto):
-        return "function"
-    return None
-
-
-def _target_headers_for_proto(proto: str, entries: list[ProtoMatch]) -> list[str]:
-    proto_type = _proto_type(proto)
+def _target_headers_for_proto(entries: list[ProtoMatch]) -> list[str]:
+    if not entries:
+        return []
+    proto_type = entries[0].proto_type
     if proto_type == "function":
         return [_header_path_from_source(entry.source) for entry in entries]
 
@@ -55,22 +36,44 @@ def _target_headers_for_proto(proto: str, entries: list[ProtoMatch]) -> list[str
     return []
 
 
+def _append_proto_entries_to_header_map(
+    header_map: HeaderMap,
+    seen_header_values: dict[str, set[str]],
+    entries: list[ProtoMatch],
+) -> None:
+    if not entries:
+        return
+
+    proto_type = entries[0].proto_type
+    if proto_type == "function":
+        for entry in entries:
+            header_path = _header_path_from_source(entry.source)
+            header_map.setdefault(header_path, [])
+            seen_header_values.setdefault(header_path, set())
+            _append_unique(header_map[header_path], seen_header_values[header_path], entry.declaration)
+        return
+
+    target_headers = _target_headers_for_proto(entries)
+    for header_path in target_headers:
+        header_map.setdefault(header_path, [])
+        seen_header_values.setdefault(header_path, set())
+        for entry in entries:
+            _append_unique(header_map[header_path], seen_header_values[header_path], entry.declaration)
+
+
 def _build_header_map(generated_headers: GeneratedHeaders) -> HeaderMap:
     header_map: HeaderMap = {}
     seen_header_values: dict[str, set[str]] = {}
 
-    for proto, entries in generated_headers.items():
-        for header_path in _target_headers_for_proto(proto, entries):
-            header_map.setdefault(header_path, [])
-            seen_header_values.setdefault(header_path, set())
-            _append_unique(header_map[header_path], seen_header_values[header_path], proto)
+    for entries in generated_headers.values():
+        _append_proto_entries_to_header_map(header_map, seen_header_values, entries)
 
     return header_map
 
 
 def _set_entry_header_paths(generated_headers: GeneratedHeaders) -> None:
-    for proto, entries in generated_headers.items():
-        target_headers = _target_headers_for_proto(proto, entries)
+    for entries in generated_headers.values():
+        target_headers = _target_headers_for_proto(entries)
         if not target_headers:
             continue
 

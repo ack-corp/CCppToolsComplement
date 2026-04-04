@@ -14,6 +14,9 @@ Recurrence = dict[str, int]
 ```python
 @dataclass(slots=True)
 class ProtoMatch:
+    declaration: str             # Original declaration string for this candidate.
+    symbol_name: str             # Parsed symbol name used as the GeneratedHeaders key.
+    proto_type: str              # One of function/macro/class/struct/typedef.
     implementation: str          # Full implementation or declaration text linked to the prototype.
     source: str                  # Source file considered the owner of this candidate.
     recurence: Recurrence        # Per-file recurrence counters for this prototype.
@@ -67,7 +70,7 @@ class ExtractedFileStatements:
 
 ```python
 GeneratedHeaders = dict[str, list[ProtoMatch]]
-# Maps one prototype string to all candidate matches found for it.
+# Maps one symbol name to all candidate matches found for it.
 
 SourceTextsByPath = dict[str, str]
 # Maps a file path to the full source text loaded from that file.
