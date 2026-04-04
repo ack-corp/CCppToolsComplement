@@ -19,15 +19,19 @@ def header_path_from_source(source_path: str) -> str:
     return str(source.with_suffix(".h"))
 
 
-def entry_recurence_score(entry: ProtoMatch) -> int:
-    return sum(entry.recurence.values())
+def best_recurence_path(entry: ProtoMatch) -> str | None:
+    best_score = 0
+    best_path: str | None = None
+    for key, recurence in entry.recurence.items():
+        if recurence >= best_score:
+            best_score = recurence
+            best_path = key
+    return best_path
 
 
 def set_entry_header_paths(generated_headers: GeneratedHeaders) -> None:
     for entry in generated_headers.values():
-        proto_type = entry.proto_type
-        if proto_type == "function":
-            entry.header_path = header_path_from_source(entry.source)
-            continue
-
-        entry.header_path = header_path_from_source(entry.source)
+        best_path = best_recurence_path(entry)
+        if best_path is None:
+            best_path = entry.source
+        entry.header_path = header_path_from_source(best_path)
