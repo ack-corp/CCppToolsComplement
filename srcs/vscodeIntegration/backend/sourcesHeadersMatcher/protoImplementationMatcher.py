@@ -7,73 +7,59 @@ from Classes.extracted_file_statements import ExtractedFileStatements
 from Classes.proto_match import ProtoMatch
 from Classes.resolved_proto import ResolvedProto
 from generatedHeaders import GeneratedHeaders
-from getSourceProto import (
+from regexTools.getImplementation import (
     get_c_function_imp,
     get_cpp_class_imp,
-    get_macro_proto,
     get_struct_imp,
+)
+from regexTools.getProto import (
+    get_macro_proto,
     get_struct_proto,
     get_typedef_proto,
 )
-
-def _extract_name(statement: str, pattern: re.Pattern[str]) -> str | None:
-    match = pattern.search(statement)
-    if match is None:
-        return None
-    return match.group(1)
-
-
-def _extract_symbol_name(
-    statement: str,
-    primary_pattern: re.Pattern[str],
-    fallback_pattern: re.Pattern[str] | None = None,
-) -> str | None:
-    symbol_name = _extract_name(statement, primary_pattern)
-    if symbol_name is not None or fallback_pattern is None:
-        return symbol_name
-    return _extract_name(statement, fallback_pattern)
+from regexTools.getSymbol import extract_name, extract_symbol_name
 
 
 def _find_matching_function_imp(proto: str, function_imps: list[str]) -> str | None:
-    proto_name = _extract_name(proto, ResolvedProto.FUNCTION_NAME_RE)
+    proto_name = extract_name(proto, ResolvedProto.FUNCTION_NAME_RE)
     if proto_name is None:
         return None
 
     for function_imp in function_imps:
-        if _extract_name(function_imp, ResolvedProto.FUNCTION_NAME_RE) == proto_name:
+        if extract_name(function_imp, ResolvedProto.FUNCTION_NAME_RE) == proto_name:
             return function_imp
     return None
 
 
 def _find_matching_struct(proto: str, struct_statements: list[str]) -> str | None:
-    proto_name = _extract_name(proto, ResolvedProto.STRUCT_NAME_RE)
+    proto_name = extract_name(proto, ResolvedProto.STRUCT_NAME_RE)
     if proto_name is None:
         return None
 
     for struct_statement in struct_statements:
-        if _extract_name(struct_statement, ResolvedProto.STRUCT_NAME_RE) == proto_name:
+        if extract_name(struct_statement, ResolvedProto.STRUCT_NAME_RE) == proto_name:
             return struct_statement
     return None
 
 
 def _find_matching_class(proto: str, class_statements: list[str]) -> str | None:
-    proto_name = _extract_name(proto, ResolvedProto.CLASS_NAME_RE)
+    proto_name = extract_name(proto, ResolvedProto.CLASS_NAME_RE)
     if proto_name is None:
         return None
 
     for class_statement in class_statements:
-        if _extract_name(class_statement, ResolvedProto.CLASS_NAME_RE) == proto_name:
+        if extract_name(class_statement, ResolvedProto.CLASS_NAME_RE) == proto_name:
             return class_statement
     return None
 
 
 def _find_matching_typedef(proto: str, typedef_statements: list[str]) -> str | None:
-    proto_name = _extract_symbol_name(proto, ResolvedProto.USING_NAME_RE, ResolvedProto.TYPEDEF_NAME_RE)
+    proto_name = extract_symbol_name(proto, ResolvedProto.USING_NAME_RE, ResolvedProto.TYPEDEF_NAME_RE)
     if proto_name is None:
         return None
 
     for typedef_statement in typedef_statements:
-        if _extract_symbol_name(typedef_statement, ResolvedProto.USING_NAME_RE, ResolvedProto.TYPEDEF_NAME_RE) == proto_name:
+        if extract_symbol_name(typedef_statement, ResolvedProto.USING_NAME_RE, ResolvedProto.TYPEDEF_NAME_RE) == proto_name:
             return typedef_statement
     return None
 
@@ -114,7 +100,7 @@ def build_proto_map(
         for proto in protos:
             implementation = _match_proto(proto_type, proto, extracted_file_statements)
             if implementation:
-                symbol_name = _extract_symbol_name(proto, symbol_pattern, fallback_symbol_pattern)
+                symbol_name = extract_symbol_name(proto, symbol_pattern, fallback_symbol_pattern)
                 if symbol_name is None:
                     continue
                 entry = ProtoMatch(

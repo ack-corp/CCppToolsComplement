@@ -29,7 +29,7 @@ TYPEDEF_START_RE = re.compile(r"^\s*typedef\b")
 USING_PROTO_RE = re.compile(r"^\s*using\s+[A-Za-z_]\w*\s*=\s*.+;\s*$", re.MULTILINE)
 
 
-def _extract_matches(text: str | None, pattern: re.Pattern[str]) -> list[str]:
+def extract_matches(text: str | None, pattern: re.Pattern[str]) -> list[str]:
     if text is None:
         return []
 
@@ -48,11 +48,11 @@ def _extract_matches(text: str | None, pattern: re.Pattern[str]) -> list[str]:
     return normalized_matches
 
 
-def _extract_macro_names(text: str | None) -> list[str]:
-    return _extract_matches(text, MACRO_PROTO_RE)
+def extract_macro_names(text: str | None) -> list[str]:
+    return extract_matches(text, MACRO_PROTO_RE)
 
 
-def _extract_multiline_statements(text: str | None, start_pattern: re.Pattern[str]) -> list[str]:
+def extract_multiline_statements(text: str | None, start_pattern: re.Pattern[str]) -> list[str]:
     if text is None:
         return []
 
@@ -91,7 +91,7 @@ def _extract_multiline_statements(text: str | None, start_pattern: re.Pattern[st
     return statements
 
 
-def _extract_function_statements(text: str | None, trailer: str) -> list[str]:
+def extract_function_statements(text: str | None, trailer: str) -> list[str]:
     if text is None:
         return []
 
@@ -122,70 +122,3 @@ def _extract_function_statements(text: str | None, trailer: str) -> list[str]:
         matches.append(stripped_line)
 
     return matches
-
-
-def get_c_function_proto(text: str | None) -> list[str]:
-    return _extract_function_statements(text, ";")
-
-
-def get_c_function_imp(text: str | None) -> list[str]:
-    return _extract_matches(text, FUNCTION_IMP_RE)
-
-
-def get_cpp_function_proto(text: str | None) -> list[str]:
-    return _extract_function_statements(text, ";")
-
-
-def get_cpp_function_imp(text: str | None) -> list[str]:
-    return _extract_matches(text, FUNCTION_IMP_RE)
-
-
-def get_cpp_class_proto(text: str | None) -> list[str]:
-    # Return an empty list when the text does not look like a forward declaration.
-    return _extract_matches(text, CLASS_PROTO_RE)
-
-
-def get_cpp_class_imp(text: str | None) -> list[str]:
-    return _extract_matches(text, CLASS_IMP_RE)
-
-
-def get_macro_proto(text: str | None) -> list[str]:
-    return _extract_macro_names(text)
-
-
-def get_macro_imp(text: str | None) -> list[str]:
-    return _extract_macro_names(text)
-
-
-def get_struct_forward_decl(text: str | None) -> list[str]:
-    return _extract_matches(text, STRUCT_FORWARD_DECL_RE)
-
-
-def get_struct_proto(text: str | None) -> list[str]:
-    forward_declarations = get_struct_forward_decl(text)
-    struct_blocks = _extract_multiline_statements(text, STRUCT_BLOCK_START_RE)
-    struct_block_names = {
-        match.group(1)
-        for struct_block in struct_blocks
-        if (match := re.search(r"\bstruct\s+([A-Za-z_]\w*)", struct_block))
-    }
-
-    return [
-        forward_declaration
-        for forward_declaration in forward_declarations
-        if re.search(r"\bstruct\s+([A-Za-z_]\w*)", forward_declaration).group(1) not in struct_block_names
-    ] + struct_blocks
-
-
-def get_struct_imp(text: str | None) -> list[str]:
-    return _extract_multiline_statements(text, STRUCT_BLOCK_START_RE)
-
-
-def get_typedef_proto(text: str | None) -> list[str]:
-    typedef_matches = _extract_multiline_statements(text, TYPEDEF_START_RE)
-    using_matches = _extract_matches(text, USING_PROTO_RE)
-    return typedef_matches + using_matches
-
-
-def get_typedef_imp(text: str | None) -> list[str]:
-    return get_typedef_proto(text)

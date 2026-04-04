@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from getSourceProto import (
+from regexTools.getImplementation import (
+    get_struct_imp,
+)
+from regexTools.getProto import (
     get_c_function_proto,
     get_cpp_function_proto,
     get_macro_proto,
     get_struct_forward_decl,
-    get_struct_imp,
     get_typedef_proto,
 )
 from utils import is_excluded, normalize_excluded_paths, read_file, write_file

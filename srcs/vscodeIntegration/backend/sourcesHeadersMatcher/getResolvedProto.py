@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from Classes.resolved_proto import ResolvedProto
-from getSourceProto import (
+from regexTools.getProto import (
     get_c_function_proto,
     get_cpp_class_proto,
     get_cpp_function_proto,
